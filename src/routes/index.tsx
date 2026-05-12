@@ -6,6 +6,7 @@ import { Sparkles, ArrowUpRight, ArrowDownRight } from "lucide-react";
 export const Route = createFileRoute("/")({ component: Dashboard });
 
 function Dashboard() {
+  const navigate = useNavigate();
   return (
     <>
       <PageHeader
