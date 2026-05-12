@@ -99,36 +99,43 @@ function AIAnalyzer() {
 
       <div className="mb-4 flex flex-wrap gap-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground self-center">Market Focus</span>
-        {["All", "Wheat", "Corn", "Soybeans"].map((c, i) => (
-          <button key={c} className={`rounded-md px-3 py-1.5 text-xs font-semibold ${i === 1 ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground"}`}>{c}</button>
+        {FOCUS.map((c) => (
+          <button
+            key={c}
+            onClick={() => setFocus(c)}
+            className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${focus === c ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
+          >
+            {c}
+          </button>
         ))}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Section title="Market Sentiment (AI)">
+        <Section title={`Market Sentiment (AI) · ${focus}`}>
           <div className="rounded-md bg-hero-navy p-4 text-primary-foreground">
-            <div className="text-xs uppercase tracking-wider text-accent">Bullish</div>
-            <div className="mt-1 font-mono-num text-5xl font-bold">72%</div>
-            <p className="mt-2 text-xs leading-relaxed text-primary-foreground/80">
-              AI identifies aggressive accumulation in wheat futures, correlated with Egyptian GASC tender activity and supply tightness in Black Sea export hubs.
-            </p>
+            <div className={`text-xs uppercase tracking-wider ${data.tone === "success" ? "text-success" : data.tone === "destructive" ? "text-destructive" : "text-accent"}`}>{data.sentiment}</div>
+            <div className="mt-1 font-mono-num text-5xl font-bold">{data.pct}%</div>
+            <p className="mt-2 text-xs leading-relaxed text-primary-foreground/80">{data.summary}</p>
           </div>
           <div className="mt-4 space-y-3 text-xs">
             <div className="font-semibold uppercase text-muted-foreground">Risk Factor Analysis</div>
-            <div>
-              <div className="flex justify-between"><span>Weather (S. America)</span><span className="font-semibold text-destructive">CRITICAL</span></div>
-              <div className="mt-1 h-1.5 rounded-full bg-secondary"><div className="h-full w-[88%] rounded-full bg-destructive" /></div>
-            </div>
-            <div>
-              <div className="flex justify-between"><span>Geopolitical Conflict</span><span className="font-semibold text-accent-foreground">MODERATE</span></div>
-              <div className="mt-1 h-1.5 rounded-full bg-secondary"><div className="h-full w-[55%] rounded-full bg-accent" /></div>
-            </div>
+            {data.risks.map((r) => (
+              <div key={r.label}>
+                <div className="flex justify-between">
+                  <span>{r.label}</span>
+                  <span className={`font-semibold ${r.tone === "destructive" ? "text-destructive" : r.tone === "success" ? "text-success" : "text-accent-foreground"}`}>{r.level}</span>
+                </div>
+                <div className="mt-1 h-1.5 rounded-full bg-secondary">
+                  <div className={`h-full rounded-full ${r.tone === "destructive" ? "bg-destructive" : r.tone === "success" ? "bg-success" : "bg-accent"}`} style={{ width: `${r.pct}%` }} />
+                </div>
+              </div>
+            ))}
           </div>
         </Section>
 
         <Section title="USDA (WASDE) Market Deviation" className="lg:col-span-2"
           actions={<button className="rounded-md border border-border px-2.5 py-1.5 text-xs">XLS Report</button>}>
-          <div className="-mt-3 mb-3 text-xs text-muted-foreground">October Actuals vs. Bloomberg Consensus Survey</div>
+          <div className="-mt-3 mb-3 text-xs text-muted-foreground">October Actuals vs. Bloomberg Consensus Survey · {focus}</div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -141,11 +148,7 @@ function AIAnalyzer() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {[
-                  ["Wheat Ending Stocks (Global)", "257.7M MT", "258.5M MT", "-0.31%", "BULLISH", "success"],
-                  ["Corn Ending Stocks (US)", "1,999M Bu", "1,980M Bu", "+0.96%", "BEARISH", "destructive"],
-                  ["Soybean Prod. (Brazil)", "162.0M MT", "161.7M MT", "+0.62%", "BEARISH", "destructive"],
-                ].map((r) => (
+                {data.rows.map((r) => (
                   <tr key={r[0]}>
                     <td className="py-3 pr-3 font-medium">{r[0]}</td>
                     <td className="py-3 pr-3 text-right font-mono-num">{r[1]}</td>
@@ -160,7 +163,7 @@ function AIAnalyzer() {
           <div className="mt-4 flex items-start gap-2 rounded-md bg-secondary/50 p-3 text-xs">
             <Sparkles className="h-4 w-4 shrink-0 text-accent mt-0.5" />
             <p className="leading-relaxed">
-              <span className="font-semibold">AI Synthesis:</span> Negative deviation in global wheat stocks confirms underlying supply fragility. Despite bearish US corn figures, the inter-commodity spread favors a long wheat bias. Hedge positions should focus on Dec '24 wheat contracts.
+              <span className="font-semibold">AI Synthesis:</span> {data.ai}
             </p>
           </div>
         </Section>
@@ -189,14 +192,10 @@ function AIAnalyzer() {
             ))}
           </div>
           <div className="lg:col-span-3">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">— Institutional Market Intelligence —</div>
-            <h2 className="mt-2 text-2xl font-bold leading-tight">Global Dynamics: Egyptian Demand Pressure vs. Improved US Weather Outlook</h2>
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">— Institutional Market Intelligence · {focus} —</div>
+            <h2 className="mt-2 text-2xl font-bold leading-tight">{data.headline}</h2>
             <div className="mt-4 rounded-md border-l-4 border-accent bg-secondary/30 p-4 text-sm leading-relaxed">
-              Current market volatility is driven by a stark divergence: Sovereign wheat purchasing reaches critical volume, while feed grains benefit from improving climatic moisture across the Western Hemisphere.
-            </div>
-            <div className="mt-4 space-y-3 text-sm leading-relaxed">
-              <p><span className="font-semibold">▸ WHEAT: MENA TENDERS AND REGIONAL SCARCITY</span></p>
-              <p className="text-muted-foreground">Egypt's <span className="font-semibold text-foreground">GASC</span> has intensified its tender cycle, revealing a broader strategic deficit in North African reserves. Analysts at <span className="text-info">Reuters</span> note this has effectively created a price floor. Furthermore, Black Sea dryness continues to degrade yield expectations, sustaining the bullish momentum in CBT contracts.</p>
+              {data.body}
             </div>
           </div>
         </div>
