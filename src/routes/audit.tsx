@@ -162,30 +162,51 @@ function Audit() {
         <Section title="Contractual Deviation Analysis" className="lg:col-span-2"
           actions={
             <div className="flex rounded-md bg-secondary p-0.5 text-xs">
-              <button className="rounded bg-card px-3 py-1 font-semibold shadow">DISCREPANCIES</button>
-              <button className="rounded px-3 py-1 text-muted-foreground">FULL TEXT</button>
+              {(["DISCREPANCIES", "FULL TEXT"] as const).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setView(v)}
+                  className={`rounded px-3 py-1 transition-colors ${view === v ? "bg-card font-semibold shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  {v}
+                </button>
+              ))}
             </div>
           }>
-          <div className="space-y-4">
-            <Article
-              tone="destructive" tag="CRITICAL" title="Article 4: Payment Terms"
-              refText="Total value is paid within 15 business days of cargo arrival date at discharge port."
-              upload="Buyer is obligated to pay within 45 days of bill of lading date."
-              note="Major discrepancy: 30-day deviation in payment window."
-            />
-            <Article
-              tone="warning" tag="WARNING" title="Article 12: Force Majeure"
-              refText="Force Majeure includes natural disasters, wars, and official epidemics preventing execution."
-              upload="Force Majeure includes disasters, wars, epidemics, and labor strikes at ports."
-              note="Clause expansion: Added labor strikes as protected event."
-            />
-            <Article
-              tone="info" tag="ADJUSTMENT" title="Article 7: Delivery Window"
-              refText="Delivery window starts July 1 and ends July 20 max."
-              upload="Loading window starts July 1 and ends in July 25."
-              note="Administrative note: 5-day alignment with current schedule."
-            />
-          </div>
+          {view === "DISCREPANCIES" ? (
+            <div className="space-y-4">
+              <Article
+                tone="destructive" tag="CRITICAL" title="Article 4: Payment Terms"
+                refText="Total value is paid within 15 business days of cargo arrival date at discharge port."
+                upload="Buyer is obligated to pay within 45 days of bill of lading date."
+                note="Major discrepancy: 30-day deviation in payment window."
+              />
+              <Article
+                tone="warning" tag="WARNING" title="Article 12: Force Majeure"
+                refText="Force Majeure includes natural disasters, wars, and official epidemics preventing execution."
+                upload="Force Majeure includes disasters, wars, epidemics, and labor strikes at ports."
+                note="Clause expansion: Added labor strikes as protected event."
+              />
+              <Article
+                tone="info" tag="ADJUSTMENT" title="Article 7: Delivery Window"
+                refText="Delivery window starts July 1 and ends July 20 max."
+                upload="Loading window starts July 1 and ends in July 25."
+                note="Administrative note: 5-day alignment with current schedule."
+              />
+            </div>
+          ) : (
+            <div className="space-y-3 text-xs leading-relaxed text-foreground/90">
+              <p className="font-semibold uppercase text-muted-foreground">Full contract — {company.name}</p>
+              <p><span className="font-semibold">Article 1 — Parties.</span> This Sale Contract is concluded between the Seller and the Buyer named above, governed by GAFTA #79 and incorporated by reference.</p>
+              <p><span className="font-semibold">Article 2 — Goods.</span> Hard milling wheat of Russian / Black Sea origin, crop year 2024, in bulk, sound and merchantable quality.</p>
+              <p><span className="font-semibold">Article 3 — Quantity & Quality.</span> 25,000 MT (5% more or less at Seller's option). Specifications per Annex A. Final at load port.</p>
+              <p className="text-destructive"><span className="font-semibold">Article 4 — Payment Terms.</span> Buyer is obligated to pay within 45 days of bill of lading date. (Standard reference: 15 business days of cargo arrival.)</p>
+              <p><span className="font-semibold">Articles 5–6 — Shipment & Documents.</span> CFR Alexandria, Egypt. Documents include Bill of Lading, Quality & Quantity certificates, Phyto, Origin, Fumigation, Insurance.</p>
+              <p className="text-info"><span className="font-semibold">Article 7 — Delivery Window.</span> Loading window starts July 1 and ends in July 25.</p>
+              <p><span className="font-semibold">Articles 8–11 — Insurance, Title, Demurrage, Arbitration.</span> Standard GAFTA terms apply. Disputes settled in London under GAFTA Arbitration Rules.</p>
+              <p className="text-accent-foreground"><span className="font-semibold">Article 12 — Force Majeure.</span> Force Majeure includes disasters, wars, epidemics, and labor strikes at ports.</p>
+            </div>
+          )}
           {decision && (
             <div className={`mt-6 rounded-md border p-3 text-xs font-semibold ${decision === "approved" ? "border-success/40 bg-success/10 text-success" : "border-destructive/40 bg-destructive/10 text-destructive"}`}>
               {decision === "approved"
