@@ -159,8 +159,8 @@ function FxRisk() {
         className="mt-6"
         actions={
           <div className="flex gap-2">
-            <button className="rounded-md border border-border px-2.5 py-1.5 text-xs">Filter</button>
-            <button className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">Export Data</button>
+            <button onClick={() => toast.info("Filter panel opening…")} className="rounded-md border border-border px-2.5 py-1.5 text-xs hover:bg-secondary">Filter</button>
+            <button onClick={() => toast.success("Export queued · CSV will be emailed")} className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors">Export Data</button>
           </div>
         }
       >
