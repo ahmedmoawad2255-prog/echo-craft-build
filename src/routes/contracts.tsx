@@ -108,7 +108,7 @@ function Contracts() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {rows.map((r, i) => (
+              {filtered.map((r, i) => (
                 <tr key={r.no} className={i % 2 ? "bg-data-row-alt" : ""}>
                   <td className="py-3 pr-4 font-mono-num text-xs text-info">{r.no}</td>
                   <td className="py-3 pr-4 font-medium">{r.supplier}</td>
