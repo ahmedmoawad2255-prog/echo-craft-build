@@ -118,7 +118,10 @@ function Dashboard() {
                 <div className="h-full w-[72%] rounded-full bg-destructive/80" />
               </div>
             </div>
-            <button className="w-full rounded-md bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground">
+            <button
+              onClick={() => { navigate({ to: "/ai-analyzer" }); }}
+              className="w-full rounded-md bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground hover:bg-accent/90 transition-colors"
+            >
               View Strategic Recommendations →
             </button>
           </div>
