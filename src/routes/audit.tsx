@@ -185,10 +185,52 @@ function Audit() {
               note="Administrative note: 5-day alignment with current schedule."
             />
           </div>
+          {decision && (
+            <div className={`mt-6 rounded-md border p-3 text-xs font-semibold ${decision === "approved" ? "border-success/40 bg-success/10 text-success" : "border-destructive/40 bg-destructive/10 text-destructive"}`}>
+              {decision === "approved"
+                ? `✓ Audited version APPROVED for ${company.name} · ${new Date().toLocaleString()}`
+                : `✕ Changes REJECTED for ${company.name} · ${new Date().toLocaleString()}`}
+              <button onClick={() => setDecision(null)} className="ml-3 underline opacity-70 hover:opacity-100">undo</button>
+            </div>
+          )}
           <div className="mt-6 flex justify-end gap-3">
-            <button className="rounded-md border border-border bg-card px-4 py-2 text-xs font-semibold hover:bg-secondary">REJECT CHANGES</button>
-            <button className="rounded-md bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90">APPROVE AUDITED VERSION</button>
+            <button
+              onClick={() => setConfirming("reject")}
+              className="rounded-md border border-border bg-card px-4 py-2 text-xs font-semibold hover:bg-destructive/10 hover:text-destructive hover:border-destructive/40 transition-colors"
+            >
+              REJECT CHANGES
+            </button>
+            <button
+              onClick={() => setConfirming("approve")}
+              className="rounded-md bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              APPROVE AUDITED VERSION
+            </button>
           </div>
+
+          {confirming && (
+            <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" onClick={() => setConfirming(null)}>
+              <div className="w-full max-w-md rounded-lg border border-border bg-card p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                <h4 className="text-base font-semibold">
+                  {confirming === "approve" ? "Approve audited version?" : "Reject changes?"}
+                </h4>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {confirming === "approve"
+                    ? `This will mark the uploaded contract for ${company.name} as the new approved reference.`
+                    : `This will discard the uploaded changes for ${company.name} and keep the standard reference.`}
+                </p>
+                <div className="mt-5 flex justify-end gap-2">
+                  <button onClick={() => setConfirming(null)} className="rounded-md border border-border bg-card px-3 py-2 text-xs font-semibold hover:bg-secondary">Cancel</button>
+                  <button
+                    onClick={() => { setDecision(confirming === "approve" ? "approved" : "rejected"); setConfirming(null); }}
+                    className={`rounded-md px-3 py-2 text-xs font-semibold text-primary-foreground ${confirming === "approve" ? "bg-success hover:bg-success/90" : "bg-destructive hover:bg-destructive/90"}`}
+                  >
+                    {confirming === "approve" ? "Confirm Approve" : "Confirm Reject"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </Section>
       </div>
     </>
