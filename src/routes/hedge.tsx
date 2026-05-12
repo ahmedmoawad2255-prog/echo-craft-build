@@ -13,8 +13,8 @@ function Hedge() {
         subtitle="Physical positions vs. exchange-traded hedge contract synchronization."
         actions={
           <>
-            <button className="rounded-md border border-border bg-card px-3 py-2 text-xs font-medium">Filter</button>
-            <button className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">⇄ Settle Positions</button>
+            <button onClick={() => toast.info("Hedge filters opening…")} className="rounded-md border border-border bg-card px-3 py-2 text-xs font-medium hover:bg-secondary">Filter</button>
+            <button onClick={() => toast.success("Settlement instructions submitted to clearing")} className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors">⇄ Settle Positions</button>
           </>
         }
       />
