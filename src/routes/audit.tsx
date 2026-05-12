@@ -23,6 +23,7 @@ function Audit() {
   const [dragOver, setDragOver] = useState(false);
   const [decision, setDecision] = useState<null | "approved" | "rejected">(null);
   const [confirming, setConfirming] = useState<null | "approve" | "reject">(null);
+  const [view, setView] = useState<"DISCREPANCIES" | "FULL TEXT">("DISCREPANCIES");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const addFiles = (list: FileList | null) => {
