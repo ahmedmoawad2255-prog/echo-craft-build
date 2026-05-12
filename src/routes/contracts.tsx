@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { PageHeader, Section, Badge } from "@/components/ui-bits";
 import { Upload, Filter } from "lucide-react";
 
@@ -13,15 +15,40 @@ const rows = [
 ];
 
 function Contracts() {
+  const [commodity, setCommodity] = useState("All Commodities");
+  const [supplier, setSupplier] = useState("All Suppliers");
+  const fileRef = useRef<HTMLInputElement>(null);
+  const filtered = rows.filter(
+    (r) =>
+      (commodity === "All Commodities" || r.commodity === commodity) &&
+      (supplier === "All Suppliers" || r.supplier === supplier),
+  );
   return (
     <>
       <PageHeader
         title="Contract Management & Upload"
         subtitle="Upload contract documents and use AI for automated data extraction."
         actions={
-          <button className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
-            <Upload className="h-3.5 w-3.5" /> Upload Contract
-          </button>
+          <>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".pdf,.doc,.docx"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                const n = e.target.files?.length ?? 0;
+                if (n) toast.success(`${n} contract${n > 1 ? "s" : ""} queued for AI extraction`);
+                e.target.value = "";
+              }}
+            />
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              <Upload className="h-3.5 w-3.5" /> Upload Contract
+            </button>
+          </>
         }
       />
 
@@ -39,12 +66,29 @@ function Contracts() {
       <Section
         actions={
           <div className="flex flex-wrap gap-2">
-            <select className="rounded-md border border-border bg-background px-3 py-1.5 text-xs"><option>All Commodities</option></select>
-            <select className="rounded-md border border-border bg-background px-3 py-1.5 text-xs"><option>All Suppliers</option></select>
-            <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium">
+            <select
+              value={commodity}
+              onChange={(e) => setCommodity(e.target.value)}
+              className="rounded-md border border-border bg-background px-3 py-1.5 text-xs"
+            >
+              <option>All Commodities</option>
+              {[...new Set(rows.map((r) => r.commodity))].map((c) => <option key={c}>{c}</option>)}
+            </select>
+            <select
+              value={supplier}
+              onChange={(e) => setSupplier(e.target.value)}
+              className="rounded-md border border-border bg-background px-3 py-1.5 text-xs"
+            >
+              <option>All Suppliers</option>
+              {[...new Set(rows.map((r) => r.supplier))].map((s) => <option key={s}>{s}</option>)}
+            </select>
+            <button
+              onClick={() => toast.info("Advanced filters panel opening…")}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-secondary"
+            >
               <Filter className="h-3 w-3" /> Advanced Filters
             </button>
-            <span className="self-center text-xs text-muted-foreground">Showing 5 of 142</span>
+            <span className="self-center text-xs text-muted-foreground">Showing {filtered.length} of 142</span>
           </div>
         }
       >
@@ -64,7 +108,7 @@ function Contracts() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {rows.map((r, i) => (
+              {filtered.map((r, i) => (
                 <tr key={r.no} className={i % 2 ? "bg-data-row-alt" : ""}>
                   <td className="py-3 pr-4 font-mono-num text-xs text-info">{r.no}</td>
                   <td className="py-3 pr-4 font-medium">{r.supplier}</td>

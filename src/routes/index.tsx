@@ -1,17 +1,22 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { PageHeader, StatCard, Section, Badge, Spark } from "@/components/ui-bits";
 import { Sparkles, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 export const Route = createFileRoute("/")({ component: Dashboard });
 
 function Dashboard() {
+  const navigate = useNavigate();
   return (
     <>
       <PageHeader
         title="Risk Command Center"
         subtitle="Live overview of contracts, FX exposure, hedge positions and AI-detected risk."
         actions={
-          <button className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
+          <button
+            onClick={() => { navigate({ to: "/contracts" }); toast.success("New trade ticket opened"); }}
+            className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
             + New Trade
           </button>
         }
@@ -62,7 +67,7 @@ function Dashboard() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <Section title="Recent Contract Activity" className="lg:col-span-2"
-          actions={<a className="text-xs text-info hover:underline">View all →</a>}>
+          actions={<Link to="/contracts" className="text-xs text-info hover:underline">View all →</Link>}>
           <div className="divide-y divide-border">
             {[
               { id: "CONT-2024-8842", supplier: "Al-Wadi Industries", commodity: "Hard Wheat", val: "$3,875,000", status: "PARTIALLY PAID", tone: "warning" as const },
@@ -113,7 +118,10 @@ function Dashboard() {
                 <div className="h-full w-[72%] rounded-full bg-destructive/80" />
               </div>
             </div>
-            <button className="w-full rounded-md bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground">
+            <button
+              onClick={() => { navigate({ to: "/ai-analyzer" }); }}
+              className="w-full rounded-md bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground hover:bg-accent/90 transition-colors"
+            >
               View Strategic Recommendations →
             </button>
           </div>

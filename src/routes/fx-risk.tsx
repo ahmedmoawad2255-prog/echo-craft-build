@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { PageHeader, Section, Badge, StatCard, Spark } from "@/components/ui-bits";
 import { Sparkles } from "lucide-react";
 
@@ -14,6 +16,18 @@ const banks = [
 ];
 
 function FxRisk() {
+  const navigate = useNavigate();
+  const [severity, setSeverity] = useState<"Mild" | "Moderate" | "Severe">("Moderate");
+  const baseRate = 48.65;
+  const sevMax = severity === "Mild" ? 8 : severity === "Moderate" ? 20 : 50;
+  const [pct, setPct] = useState(15);
+  const stressed = useMemo(() => baseRate * (1 + pct / 100), [pct]);
+  const baseImpact = -6.8;
+  const netImpact = useMemo(() => baseImpact - (pct / 100) * 56, [pct]);
+  const incremental = netImpact - baseImpact;
+  const stressLevel = pct >= 30 ? "CRITICAL" : pct >= 15 ? "ELEVATED" : "STABLE";
+  const stressTone = pct >= 30 ? "destructive" : pct >= 15 ? "warning" : "success";
+  const solvency = Math.max(0, Math.min(100, 100 - pct * 2.4));
   return (
     <>
       <PageHeader
@@ -51,7 +65,7 @@ function FxRisk() {
           <p className="mt-2 text-xs leading-relaxed text-primary-foreground/85">
             "The current FX exposure risk is elevated due to increased unpaid soybean meal contracts combined with rising USD/EGP volatility and weak hedge coverage."
           </p>
-          <button className="mt-3 inline-flex items-center gap-1 rounded-md bg-accent px-2.5 py-1.5 text-[11px] font-semibold text-accent-foreground">
+          <button onClick={() => { navigate({ to: "/ai-analyzer" }); }} className="mt-3 inline-flex items-center gap-1 rounded-md bg-accent px-2.5 py-1.5 text-[11px] font-semibold text-accent-foreground hover:bg-accent/90 transition-colors">
             View Strategic Recommendations →
           </button>
         </div>
@@ -61,39 +75,58 @@ function FxRisk() {
         <Section title="FX Stress Testing Center" className="lg:col-span-2"
           actions={
             <div className="flex gap-1 rounded-md bg-secondary p-0.5 text-xs">
-              <button className="rounded px-3 py-1 text-muted-foreground">Mild</button>
-              <button className="rounded bg-card px-3 py-1 font-semibold shadow">Moderate</button>
-              <button className="rounded px-3 py-1 text-muted-foreground">Severe</button>
+              {(["Mild", "Moderate", "Severe"] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => {
+                    setSeverity(s);
+                    const cap = s === "Mild" ? 8 : s === "Moderate" ? 20 : 50;
+                    setPct((p) => Math.min(p, cap));
+                  }}
+                  className={`rounded px-3 py-1 transition-colors ${severity === s ? "bg-card font-semibold shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  {s}
+                </button>
+              ))}
             </div>
           }>
           <div className="grid gap-6 md:grid-cols-2">
             <div>
               <div className="text-xs uppercase tracking-wide text-muted-foreground">USD Appreciation %</div>
-              <div className="mt-1 font-mono-num text-3xl font-bold">+15.0%</div>
-              <input type="range" defaultValue={50} className="mt-3 w-full accent-[oklch(0.78_0.16_75)]" />
+              <div className="mt-1 font-mono-num text-3xl font-bold">+{pct.toFixed(1)}%</div>
+              <input
+                type="range"
+                min={0}
+                max={sevMax}
+                step={0.5}
+                value={pct}
+                onChange={(e) => setPct(parseFloat(e.target.value))}
+                className="mt-3 w-full accent-[oklch(0.78_0.16_75)]"
+              />
               <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
-                <span>Current (48.65)</span><span>Extreme (72.98)</span>
+                <span>Current ({baseRate.toFixed(2)})</span>
+                <span>Max ({(baseRate * (1 + sevMax / 100)).toFixed(2)}) · {severity}</span>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <div className="rounded-md border border-border p-2">
                   <div className="text-[10px] uppercase text-muted-foreground">Stressed EGP Rate</div>
-                  <div className="font-mono-num text-lg font-semibold">55.9475</div>
+                  <div className="font-mono-num text-lg font-semibold">{stressed.toFixed(4)}</div>
                 </div>
-                <div className="rounded-md border border-border bg-destructive/10 p-2">
-                  <div className="text-[10px] uppercase text-destructive">Liquidity Stress</div>
-                  <div className="text-lg font-semibold text-destructive">CRITICAL</div>
+                <div className={`rounded-md border border-border p-2 ${stressTone === "destructive" ? "bg-destructive/10" : stressTone === "warning" ? "bg-accent/10" : "bg-success/10"}`}>
+                  <div className={`text-[10px] uppercase ${stressTone === "destructive" ? "text-destructive" : stressTone === "warning" ? "text-accent-foreground" : "text-success"}`}>Liquidity Stress</div>
+                  <div className={`text-lg font-semibold ${stressTone === "destructive" ? "text-destructive" : stressTone === "warning" ? "text-accent-foreground" : "text-success"}`}>{stressLevel}</div>
                 </div>
               </div>
             </div>
             <div className="rounded-md bg-secondary/40 p-4">
               <div className="text-xs uppercase tracking-wide text-destructive">Recalculated Net Impact</div>
-              <div className="mt-2 font-mono-num text-4xl font-bold text-destructive">-$15.2M</div>
-              <div className="mt-1 text-xs text-muted-foreground">⚠ Incremental Loss: $8.4M</div>
+              <div className="mt-2 font-mono-num text-4xl font-bold text-destructive">${netImpact.toFixed(1)}M</div>
+              <div className="mt-1 text-xs text-muted-foreground">⚠ Incremental Loss: ${Math.abs(incremental).toFixed(1)}M</div>
               <div className="mt-4 text-[11px] uppercase text-muted-foreground">Solvency Gauge</div>
               <div className="mt-2 h-2 rounded-full bg-secondary">
-                <div className="h-full w-[42%] rounded-full bg-destructive" />
+                <div className={`h-full rounded-full transition-all ${solvency < 40 ? "bg-destructive" : solvency < 70 ? "bg-accent" : "bg-success"}`} style={{ width: `${solvency}%` }} />
               </div>
-              <div className="mt-1 text-right text-xs font-mono-num">42%</div>
+              <div className="mt-1 text-right text-xs font-mono-num">{solvency.toFixed(0)}%</div>
             </div>
           </div>
         </Section>
@@ -126,8 +159,8 @@ function FxRisk() {
         className="mt-6"
         actions={
           <div className="flex gap-2">
-            <button className="rounded-md border border-border px-2.5 py-1.5 text-xs">Filter</button>
-            <button className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">Export Data</button>
+            <button onClick={() => toast.info("Filter panel opening…")} className="rounded-md border border-border px-2.5 py-1.5 text-xs hover:bg-secondary">Filter</button>
+            <button onClick={() => toast.success("Export queued · CSV will be emailed")} className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors">Export Data</button>
           </div>
         }
       >

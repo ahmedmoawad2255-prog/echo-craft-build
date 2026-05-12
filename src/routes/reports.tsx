@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { PageHeader, Section } from "@/components/ui-bits";
 import { Download } from "lucide-react";
 
@@ -23,7 +24,10 @@ function Reports() {
                 <div className="text-sm font-semibold">{r.title}</div>
                 <div className="text-xs text-muted-foreground">{r.date} · {r.size}</div>
               </div>
-              <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium hover:bg-secondary">
+              <button
+                onClick={() => toast.success(`${r.title}.${r.type.toLowerCase()} downloading…`)}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium hover:bg-secondary"
+              >
                 <Download className="h-3.5 w-3.5" /> {r.type}
               </button>
             </div>

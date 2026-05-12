@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { PageHeader, Section, Badge } from "@/components/ui-bits";
 import { AlertTriangle, Plus } from "lucide-react";
 
@@ -12,8 +13,8 @@ function Hedge() {
         subtitle="Physical positions vs. exchange-traded hedge contract synchronization."
         actions={
           <>
-            <button className="rounded-md border border-border bg-card px-3 py-2 text-xs font-medium">Filter</button>
-            <button className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">⇄ Settle Positions</button>
+            <button onClick={() => toast.info("Hedge filters opening…")} className="rounded-md border border-border bg-card px-3 py-2 text-xs font-medium hover:bg-secondary">Filter</button>
+            <button onClick={() => toast.success("Settlement instructions submitted to clearing")} className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors">⇄ Settle Positions</button>
           </>
         }
       />
@@ -26,7 +27,7 @@ function Hedge() {
             <div className="text-xs text-muted-foreground">25,000 MT of Wheat (PHY-2024-08) detected without exchange coverage.</div>
           </div>
         </div>
-        <button className="rounded-md bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground">Cover Now</button>
+        <button onClick={() => toast.success("Cover order routed: 500 ZW Sep '24 lots")} className="rounded-md bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground hover:bg-destructive/90 transition-colors">Cover Now</button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -90,7 +91,7 @@ function Hedge() {
       </Section>
 
       <Section title="Open Exchange Contracts" className="mt-6"
-        actions={<button className="inline-flex items-center gap-1 rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground"><Plus className="h-3 w-3" /> Add Trade</button>}>
+        actions={<button onClick={() => toast.success("New trade form ready")} className="inline-flex items-center gap-1 rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground hover:bg-accent/90 transition-colors"><Plus className="h-3 w-3" /> Add Trade</button>}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
