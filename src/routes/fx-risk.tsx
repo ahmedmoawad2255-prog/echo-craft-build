@@ -7,24 +7,29 @@ import { Sparkles } from "lucide-react";
 export const Route = createFileRoute("/fx-risk")({ component: FxRisk });
 
 const banks = [
-  { b: "NBE", r: "48.65", d: "+0.12%", active: true, sub: "National Bank of Egypt" },
-  { b: "Banque Misr", r: "48.62", d: "0.00%", sub: "Institutional Rate" },
-  { b: "CIB", r: "48.70", d: "+0.08%", sub: "Commercial Intl Bank" },
-  { b: "HSBC Egypt", r: "48.58", d: "-0.02%", sub: "Global Liquidity Pool" },
-  { b: "QNB", r: "48.55", d: "+0.15%", sub: "Qatar National Bank" },
-  { b: "AlexBank", r: "48.60", d: "0.00%", sub: "Intesa Sanpaolo Group" },
+  { b: "NBE", r: 48.65, d: "+0.12%", sub: "National Bank of Egypt" },
+  { b: "Banque Misr", r: 48.62, d: "0.00%", sub: "Institutional Rate" },
+  { b: "CIB", r: 48.70, d: "+0.08%", sub: "Commercial Intl Bank" },
+  { b: "HSBC Egypt", r: 48.58, d: "-0.02%", sub: "Global Liquidity Pool" },
+  { b: "QNB", r: 48.55, d: "+0.15%", sub: "Qatar National Bank" },
+  { b: "AlexBank", r: 48.60, d: "0.00%", sub: "Intesa Sanpaolo Group" },
 ];
 
 function FxRisk() {
   const navigate = useNavigate();
   const [severity, setSeverity] = useState<"Mild" | "Moderate" | "Severe">("Moderate");
-  const baseRate = 48.65;
+  const [bankIdx, setBankIdx] = useState(0);
+  const [bankOpen, setBankOpen] = useState(false);
+  const activeBank = banks[bankIdx];
+  const baseRate = activeBank.r;
   const sevMax = severity === "Mild" ? 8 : severity === "Moderate" ? 20 : 50;
   const [pct, setPct] = useState(15);
-  const stressed = useMemo(() => baseRate * (1 + pct / 100), [pct]);
-  const baseImpact = -6.8;
-  const netImpact = useMemo(() => baseImpact - (pct / 100) * 56, [pct]);
-  const incremental = netImpact - baseImpact;
+  const stressed = useMemo(() => baseRate * (1 + pct / 100), [baseRate, pct]);
+  // USD outstanding exposure (millions). MTM = -outstanding * (rate move). Baseline at 0% is 0.
+  const usdExposureM = 58.1;
+  const netImpact = useMemo(() => -(usdExposureM * pct) / 100, [pct]);
+  const baselineMtm = -6.8 * (baseRate / 48.65); // baseline MTM scales mildly with bank rate
+  const incremental = netImpact - baselineMtm;
   const stressLevel = pct >= 30 ? "CRITICAL" : pct >= 15 ? "ELEVATED" : "STABLE";
   const stressTone = pct >= 30 ? "destructive" : pct >= 15 ? "warning" : "success";
   const solvency = Math.max(0, Math.min(100, 100 - pct * 2.4));
@@ -35,19 +40,75 @@ function FxRisk() {
         subtitle="Monitor USD/EGP fluctuations and evaluate stress impact on unpaid commodity contracts."
       />
 
-      <Section title="Bank Exchange Rates (USD/EGP)" actions={<span className="text-xs text-muted-foreground">Last Update: Oct 24, 14:30 EET</span>}>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-          {banks.map((x) => (
-            <div key={x.b} className={`rounded-md border p-3 ${x.active ? "border-accent bg-accent/5 ring-amber-glow" : "border-border"}`}>
-              <div className="flex items-center justify-between text-[11px] uppercase tracking-wide text-muted-foreground">
-                <span className="font-semibold">{x.b}</span>
-                <span className={x.d.startsWith("-") ? "text-destructive" : "text-success"}>{x.d}</span>
-              </div>
-              <div className="mt-1 font-mono-num text-2xl font-bold">{x.r}</div>
-              {x.active && <div className="text-[10px] font-semibold uppercase text-accent-foreground">Active</div>}
-              <div className="mt-1 text-[10px] text-muted-foreground">{x.sub}</div>
+      <Section
+        title="Bank Exchange Rates (USD/EGP)"
+        actions={
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">Last Update: Oct 24, 14:30 EET</span>
+            <div className="relative">
+              <button
+                onClick={() => setBankOpen((o) => !o)}
+                className="inline-flex items-center gap-2 rounded-md border border-accent bg-accent/10 px-3 py-1.5 text-xs font-semibold hover:bg-accent/20 transition-colors"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                Pricing Source: <span className="font-bold">{activeBank.b}</span>
+                <span className="font-mono-num text-accent-foreground">{activeBank.r.toFixed(4)}</span>
+                <svg className={`h-3 w-3 transition-transform ${bankOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor"><path d="M5.5 7.5l4.5 4.5 4.5-4.5z"/></svg>
+              </button>
+              {bankOpen && (
+                <div className="absolute right-0 top-full z-30 mt-1 w-72 overflow-hidden rounded-md border border-border bg-card shadow-lg">
+                  {banks.map((x, i) => (
+                    <button
+                      key={x.b}
+                      onClick={() => {
+                        setBankIdx(i);
+                        setBankOpen(false);
+                        toast.success(`Repriced against ${x.b} · ${x.r.toFixed(4)} EGP/USD`);
+                      }}
+                      className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs hover:bg-secondary/60 ${i === bankIdx ? "bg-secondary/40" : ""}`}
+                    >
+                      <div>
+                        <div className="font-semibold">{x.b}</div>
+                        <div className="text-[10px] text-muted-foreground">{x.sub}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-mono-num font-bold">{x.r.toFixed(4)}</div>
+                        <div className={`text-[10px] ${x.d.startsWith("-") ? "text-destructive" : "text-success"}`}>{x.d}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          ))}
+          </div>
+        }
+      >
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          {banks.map((x, i) => {
+            const active = i === bankIdx;
+            return (
+              <button
+                key={x.b}
+                onClick={() => {
+                  setBankIdx(i);
+                  toast.success(`Repriced against ${x.b} · ${x.r.toFixed(4)} EGP/USD`);
+                }}
+                className={`text-left rounded-md border p-3 transition-all ${active ? "border-accent bg-accent/5 ring-amber-glow scale-[1.02]" : "border-border hover:border-accent/50 hover:bg-secondary/40"}`}
+              >
+                <div className="flex items-center justify-between text-[11px] uppercase tracking-wide text-muted-foreground">
+                  <span className="font-semibold">{x.b}</span>
+                  <span className={x.d.startsWith("-") ? "text-destructive" : "text-success"}>{x.d}</span>
+                </div>
+                <div className="mt-1 font-mono-num text-2xl font-bold">{x.r.toFixed(2)}</div>
+                {active ? (
+                  <div className="text-[10px] font-semibold uppercase text-accent-foreground">Active</div>
+                ) : (
+                  <div className="text-[10px] font-semibold uppercase text-muted-foreground/60">Click to select</div>
+                )}
+                <div className="mt-1 text-[10px] text-muted-foreground">{x.sub}</div>
+              </button>
+            );
+          })}
         </div>
       </Section>
 
