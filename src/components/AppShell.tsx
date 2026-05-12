@@ -29,6 +29,7 @@ const nav = [
 
 export function AppShell() {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
 
   return (
     <div className="flex min-h-screen bg-background">
