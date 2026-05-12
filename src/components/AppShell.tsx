@@ -65,18 +65,27 @@ export function AppShell() {
         </nav>
 
         <div className="px-3 pb-3">
-          <button className="w-full rounded-md bg-accent px-3 py-2.5 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition-transform hover:scale-[1.01]">
+          <button
+            onClick={() => { navigate({ to: "/fx-risk" }); toast.success("Opening Risk Management Console"); }}
+            className="w-full rounded-md bg-accent px-3 py-2.5 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition-transform hover:scale-[1.01]"
+          >
             + Manage Risk
           </button>
         </div>
 
         <div className="border-t border-sidebar-border px-3 py-3 space-y-1">
-          <a className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-muted hover:bg-sidebar-active/60">
+          <button
+            onClick={() => toast.info("Support ticket portal opening…")}
+            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-muted hover:bg-sidebar-active/60"
+          >
             <LifeBuoy className="h-4 w-4" /> Support
-          </a>
-          <a className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-muted hover:bg-sidebar-active/60">
+          </button>
+          <button
+            onClick={() => toast.info("Settings panel coming online")}
+            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-muted hover:bg-sidebar-active/60"
+          >
             <Settings className="h-4 w-4" /> Settings
-          </a>
+          </button>
         </div>
       </aside>
 
