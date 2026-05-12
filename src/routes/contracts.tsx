@@ -15,6 +15,14 @@ const rows = [
 ];
 
 function Contracts() {
+  const [commodity, setCommodity] = useState("All Commodities");
+  const [supplier, setSupplier] = useState("All Suppliers");
+  const fileRef = useRef<HTMLInputElement>(null);
+  const filtered = rows.filter(
+    (r) =>
+      (commodity === "All Commodities" || r.commodity === commodity) &&
+      (supplier === "All Suppliers" || r.supplier === supplier),
+  );
   return (
     <>
       <PageHeader
