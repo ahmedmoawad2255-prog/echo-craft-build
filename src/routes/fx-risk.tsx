@@ -113,12 +113,12 @@ function FxRisk() {
       </Section>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-4">
-        <StatCard label="Total USD Liability" value="$58.1M" delta="+12.4% vs last week" tone="warning"
+        <StatCard label="Total USD Liability" value="$58.1M" delta={`@ ${activeBank.b} ${baseRate.toFixed(4)}`} tone="warning"
           spark={<Spark data={[40,42,48,50,53,55,58]} color="oklch(0.58 0.22 27)" />} />
-        <StatCard label="FX MTM Impact" value="-$6.8M" delta="Unrealized EGP loss" tone="destructive"
+        <StatCard label="EGP Equivalent" value={`E£${(usdExposureM * baseRate).toFixed(1)}M`} delta={`Bank: ${activeBank.b}`} tone="default"
+          spark={<Spark data={[40,42,48,50,53,55,58].map(v => v * baseRate / 10)} color="oklch(0.55 0.18 250)" />} />
+        <StatCard label="FX MTM Impact" value={`$${baselineMtm.toFixed(1)}M`} delta="Unrealized EGP loss" tone="destructive"
           spark={<Spark data={[1,-1,-2,-3,-5,-6,-7]} color="oklch(0.58 0.22 27)" />} />
-        <StatCard label="Value-at-Risk (95%)" value="$3.4M" hint="Daily Exposure Limit"
-          spark={<Spark data={[3,3.2,3.1,3.4,3.3,3.5,3.4]} color="oklch(0.55 0.18 250)" />} />
         <div className="rounded-lg bg-hero-navy p-4 text-primary-foreground">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent">
             <Sparkles className="h-3.5 w-3.5" /> AI Risk Intelligence
