@@ -192,26 +192,36 @@ function FxRisk() {
           </div>
         </Section>
 
-        <Section title="Scenario Comparison">
-          <div className="space-y-4 text-xs">
-            <div className="flex justify-between font-semibold uppercase text-muted-foreground"><span>Open Accounts Payable</span><span>EGP Billion</span></div>
-            <div>
-              <div className="flex justify-between"><span>BASE</span><span className="font-mono-num">2.82</span></div>
-              <div className="mt-1 h-3 rounded bg-primary/80" style={{ width: "75%" }} />
-              <div className="mt-2 flex justify-between"><span>STRESSED</span><span className="font-mono-num">3.24</span></div>
-              <div className="mt-1 h-3 rounded bg-destructive" style={{ width: "92%" }} />
-            </div>
-            <div className="flex justify-between font-semibold uppercase text-muted-foreground pt-2"><span>Outstanding Contracts</span><span>EGP Billion</span></div>
-            <div>
-              <div className="flex justify-between"><span>BASE</span><span className="font-mono-num">1.95</span></div>
-              <div className="mt-1 h-3 rounded bg-primary/80" style={{ width: "55%" }} />
-              <div className="mt-2 flex justify-between"><span>STRESSED</span><span className="font-mono-num">3.03</span></div>
-              <div className="mt-1 h-3 rounded bg-destructive" style={{ width: "85%" }} />
-            </div>
-            <div className="rounded-md bg-secondary/50 p-2 text-[11px] leading-relaxed text-muted-foreground">
-              <span className="font-semibold text-foreground">Observation:</span> Moderate stress scenario shifts $2.4B EGP from low-risk to high-risk liquidity buckets. Immediate hedging of Q4 contracts recommended.
-            </div>
-          </div>
+        <Section title={`Scenario Comparison · ${activeBank.b}`}>
+          {(() => {
+            const apUsd = 58.1;
+            const ocUsd = 62.0;
+            const apBase = (apUsd * baseRate) / 1000;
+            const apStress = (apUsd * stressed) / 1000;
+            const ocBase = (ocUsd * baseRate) / 1000;
+            const ocStress = (ocUsd * stressed) / 1000;
+            return (
+              <div className="space-y-4 text-xs">
+                <div className="flex justify-between font-semibold uppercase text-muted-foreground"><span>Open Accounts Payable</span><span>EGP Billion</span></div>
+                <div>
+                  <div className="flex justify-between"><span>BASE</span><span className="font-mono-num">{apBase.toFixed(2)}</span></div>
+                  <div className="mt-1 h-3 rounded bg-primary/80 transition-all" style={{ width: "75%" }} />
+                  <div className="mt-2 flex justify-between"><span>STRESSED</span><span className="font-mono-num">{apStress.toFixed(2)}</span></div>
+                  <div className="mt-1 h-3 rounded bg-destructive transition-all" style={{ width: `${Math.min(100, 75 * (apStress / apBase))}%` }} />
+                </div>
+                <div className="flex justify-between font-semibold uppercase text-muted-foreground pt-2"><span>Outstanding Contracts</span><span>EGP Billion</span></div>
+                <div>
+                  <div className="flex justify-between"><span>BASE</span><span className="font-mono-num">{ocBase.toFixed(2)}</span></div>
+                  <div className="mt-1 h-3 rounded bg-primary/80 transition-all" style={{ width: "55%" }} />
+                  <div className="mt-2 flex justify-between"><span>STRESSED</span><span className="font-mono-num">{ocStress.toFixed(2)}</span></div>
+                  <div className="mt-1 h-3 rounded bg-destructive transition-all" style={{ width: `${Math.min(100, 55 * (ocStress / ocBase))}%` }} />
+                </div>
+                <div className="rounded-md bg-secondary/50 p-2 text-[11px] leading-relaxed text-muted-foreground">
+                  <span className="font-semibold text-foreground">Observation:</span> {severity} stress at {activeBank.b} reprices {pct.toFixed(1)}% of USD/EGP, shifting E£{((apStress + ocStress) - (apBase + ocBase)).toFixed(2)}B from low-risk to high-risk liquidity buckets.
+                </div>
+              </div>
+            );
+          })()}
         </Section>
       </div>
 
