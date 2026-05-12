@@ -91,7 +91,7 @@ function Hedge() {
       </Section>
 
       <Section title="Open Exchange Contracts" className="mt-6"
-        actions={<button className="inline-flex items-center gap-1 rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground"><Plus className="h-3 w-3" /> Add Trade</button>}>
+        actions={<button onClick={() => toast.success("New trade form ready")} className="inline-flex items-center gap-1 rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground hover:bg-accent/90 transition-colors"><Plus className="h-3 w-3" /> Add Trade</button>}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
