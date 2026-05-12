@@ -93,31 +93,40 @@ function FxRisk() {
           <div className="grid gap-6 md:grid-cols-2">
             <div>
               <div className="text-xs uppercase tracking-wide text-muted-foreground">USD Appreciation %</div>
-              <div className="mt-1 font-mono-num text-3xl font-bold">+15.0%</div>
-              <input type="range" defaultValue={50} className="mt-3 w-full accent-[oklch(0.78_0.16_75)]" />
+              <div className="mt-1 font-mono-num text-3xl font-bold">+{pct.toFixed(1)}%</div>
+              <input
+                type="range"
+                min={0}
+                max={sevMax}
+                step={0.5}
+                value={pct}
+                onChange={(e) => setPct(parseFloat(e.target.value))}
+                className="mt-3 w-full accent-[oklch(0.78_0.16_75)]"
+              />
               <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
-                <span>Current (48.65)</span><span>Extreme (72.98)</span>
+                <span>Current ({baseRate.toFixed(2)})</span>
+                <span>Max ({(baseRate * (1 + sevMax / 100)).toFixed(2)}) · {severity}</span>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <div className="rounded-md border border-border p-2">
                   <div className="text-[10px] uppercase text-muted-foreground">Stressed EGP Rate</div>
-                  <div className="font-mono-num text-lg font-semibold">55.9475</div>
+                  <div className="font-mono-num text-lg font-semibold">{stressed.toFixed(4)}</div>
                 </div>
-                <div className="rounded-md border border-border bg-destructive/10 p-2">
-                  <div className="text-[10px] uppercase text-destructive">Liquidity Stress</div>
-                  <div className="text-lg font-semibold text-destructive">CRITICAL</div>
+                <div className={`rounded-md border border-border p-2 ${stressTone === "destructive" ? "bg-destructive/10" : stressTone === "warning" ? "bg-accent/10" : "bg-success/10"}`}>
+                  <div className={`text-[10px] uppercase ${stressTone === "destructive" ? "text-destructive" : stressTone === "warning" ? "text-accent-foreground" : "text-success"}`}>Liquidity Stress</div>
+                  <div className={`text-lg font-semibold ${stressTone === "destructive" ? "text-destructive" : stressTone === "warning" ? "text-accent-foreground" : "text-success"}`}>{stressLevel}</div>
                 </div>
               </div>
             </div>
             <div className="rounded-md bg-secondary/40 p-4">
               <div className="text-xs uppercase tracking-wide text-destructive">Recalculated Net Impact</div>
-              <div className="mt-2 font-mono-num text-4xl font-bold text-destructive">-$15.2M</div>
-              <div className="mt-1 text-xs text-muted-foreground">⚠ Incremental Loss: $8.4M</div>
+              <div className="mt-2 font-mono-num text-4xl font-bold text-destructive">${netImpact.toFixed(1)}M</div>
+              <div className="mt-1 text-xs text-muted-foreground">⚠ Incremental Loss: ${Math.abs(incremental).toFixed(1)}M</div>
               <div className="mt-4 text-[11px] uppercase text-muted-foreground">Solvency Gauge</div>
               <div className="mt-2 h-2 rounded-full bg-secondary">
-                <div className="h-full w-[42%] rounded-full bg-destructive" />
+                <div className={`h-full rounded-full transition-all ${solvency < 40 ? "bg-destructive" : solvency < 70 ? "bg-accent" : "bg-success"}`} style={{ width: `${solvency}%` }} />
               </div>
-              <div className="mt-1 text-right text-xs font-mono-num">42%</div>
+              <div className="mt-1 text-right text-xs font-mono-num">{solvency.toFixed(0)}%</div>
             </div>
           </div>
         </Section>
