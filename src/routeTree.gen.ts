@@ -9,8 +9,50 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as MarginRouteImport } from './routes/margin'
+import { Route as HedgeRouteImport } from './routes/hedge'
+import { Route as FxRiskRouteImport } from './routes/fx-risk'
+import { Route as ContractsRouteImport } from './routes/contracts'
+import { Route as AuditRouteImport } from './routes/audit'
+import { Route as AiAnalyzerRouteImport } from './routes/ai-analyzer'
 import { Route as IndexRouteImport } from './routes/index'
 
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarginRoute = MarginRouteImport.update({
+  id: '/margin',
+  path: '/margin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HedgeRoute = HedgeRouteImport.update({
+  id: '/hedge',
+  path: '/hedge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FxRiskRoute = FxRiskRouteImport.update({
+  id: '/fx-risk',
+  path: '/fx-risk',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContractsRoute = ContractsRouteImport.update({
+  id: '/contracts',
+  path: '/contracts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuditRoute = AuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiAnalyzerRoute = AiAnalyzerRouteImport.update({
+  id: '/ai-analyzer',
+  path: '/ai-analyzer',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +61,130 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ai-analyzer': typeof AiAnalyzerRoute
+  '/audit': typeof AuditRoute
+  '/contracts': typeof ContractsRoute
+  '/fx-risk': typeof FxRiskRoute
+  '/hedge': typeof HedgeRoute
+  '/margin': typeof MarginRoute
+  '/reports': typeof ReportsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ai-analyzer': typeof AiAnalyzerRoute
+  '/audit': typeof AuditRoute
+  '/contracts': typeof ContractsRoute
+  '/fx-risk': typeof FxRiskRoute
+  '/hedge': typeof HedgeRoute
+  '/margin': typeof MarginRoute
+  '/reports': typeof ReportsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ai-analyzer': typeof AiAnalyzerRoute
+  '/audit': typeof AuditRoute
+  '/contracts': typeof ContractsRoute
+  '/fx-risk': typeof FxRiskRoute
+  '/hedge': typeof HedgeRoute
+  '/margin': typeof MarginRoute
+  '/reports': typeof ReportsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/ai-analyzer'
+    | '/audit'
+    | '/contracts'
+    | '/fx-risk'
+    | '/hedge'
+    | '/margin'
+    | '/reports'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/ai-analyzer'
+    | '/audit'
+    | '/contracts'
+    | '/fx-risk'
+    | '/hedge'
+    | '/margin'
+    | '/reports'
+  id:
+    | '__root__'
+    | '/'
+    | '/ai-analyzer'
+    | '/audit'
+    | '/contracts'
+    | '/fx-risk'
+    | '/hedge'
+    | '/margin'
+    | '/reports'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AiAnalyzerRoute: typeof AiAnalyzerRoute
+  AuditRoute: typeof AuditRoute
+  ContractsRoute: typeof ContractsRoute
+  FxRiskRoute: typeof FxRiskRoute
+  HedgeRoute: typeof HedgeRoute
+  MarginRoute: typeof MarginRoute
+  ReportsRoute: typeof ReportsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/margin': {
+      id: '/margin'
+      path: '/margin'
+      fullPath: '/margin'
+      preLoaderRoute: typeof MarginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hedge': {
+      id: '/hedge'
+      path: '/hedge'
+      fullPath: '/hedge'
+      preLoaderRoute: typeof HedgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fx-risk': {
+      id: '/fx-risk'
+      path: '/fx-risk'
+      fullPath: '/fx-risk'
+      preLoaderRoute: typeof FxRiskRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contracts': {
+      id: '/contracts'
+      path: '/contracts'
+      fullPath: '/contracts'
+      preLoaderRoute: typeof ContractsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/audit': {
+      id: '/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-analyzer': {
+      id: '/ai-analyzer'
+      path: '/ai-analyzer'
+      fullPath: '/ai-analyzer'
+      preLoaderRoute: typeof AiAnalyzerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,7 +197,24 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AiAnalyzerRoute: AiAnalyzerRoute,
+  AuditRoute: AuditRoute,
+  ContractsRoute: ContractsRoute,
+  FxRiskRoute: FxRiskRoute,
+  HedgeRoute: HedgeRoute,
+  MarginRoute: MarginRoute,
+  ReportsRoute: ReportsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
