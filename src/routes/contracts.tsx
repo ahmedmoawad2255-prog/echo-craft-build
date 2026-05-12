@@ -66,12 +66,29 @@ function Contracts() {
       <Section
         actions={
           <div className="flex flex-wrap gap-2">
-            <select className="rounded-md border border-border bg-background px-3 py-1.5 text-xs"><option>All Commodities</option></select>
-            <select className="rounded-md border border-border bg-background px-3 py-1.5 text-xs"><option>All Suppliers</option></select>
-            <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium">
+            <select
+              value={commodity}
+              onChange={(e) => setCommodity(e.target.value)}
+              className="rounded-md border border-border bg-background px-3 py-1.5 text-xs"
+            >
+              <option>All Commodities</option>
+              {[...new Set(rows.map((r) => r.commodity))].map((c) => <option key={c}>{c}</option>)}
+            </select>
+            <select
+              value={supplier}
+              onChange={(e) => setSupplier(e.target.value)}
+              className="rounded-md border border-border bg-background px-3 py-1.5 text-xs"
+            >
+              <option>All Suppliers</option>
+              {[...new Set(rows.map((r) => r.supplier))].map((s) => <option key={s}>{s}</option>)}
+            </select>
+            <button
+              onClick={() => toast.info("Advanced filters panel opening…")}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-secondary"
+            >
               <Filter className="h-3 w-3" /> Advanced Filters
             </button>
-            <span className="self-center text-xs text-muted-foreground">Showing 5 of 142</span>
+            <span className="self-center text-xs text-muted-foreground">Showing {filtered.length} of 142</span>
           </div>
         }
       >
