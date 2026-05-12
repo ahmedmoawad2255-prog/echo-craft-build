@@ -7,24 +7,29 @@ import { Sparkles } from "lucide-react";
 export const Route = createFileRoute("/fx-risk")({ component: FxRisk });
 
 const banks = [
-  { b: "NBE", r: "48.65", d: "+0.12%", active: true, sub: "National Bank of Egypt" },
-  { b: "Banque Misr", r: "48.62", d: "0.00%", sub: "Institutional Rate" },
-  { b: "CIB", r: "48.70", d: "+0.08%", sub: "Commercial Intl Bank" },
-  { b: "HSBC Egypt", r: "48.58", d: "-0.02%", sub: "Global Liquidity Pool" },
-  { b: "QNB", r: "48.55", d: "+0.15%", sub: "Qatar National Bank" },
-  { b: "AlexBank", r: "48.60", d: "0.00%", sub: "Intesa Sanpaolo Group" },
+  { b: "NBE", r: 48.65, d: "+0.12%", sub: "National Bank of Egypt" },
+  { b: "Banque Misr", r: 48.62, d: "0.00%", sub: "Institutional Rate" },
+  { b: "CIB", r: 48.70, d: "+0.08%", sub: "Commercial Intl Bank" },
+  { b: "HSBC Egypt", r: 48.58, d: "-0.02%", sub: "Global Liquidity Pool" },
+  { b: "QNB", r: 48.55, d: "+0.15%", sub: "Qatar National Bank" },
+  { b: "AlexBank", r: 48.60, d: "0.00%", sub: "Intesa Sanpaolo Group" },
 ];
 
 function FxRisk() {
   const navigate = useNavigate();
   const [severity, setSeverity] = useState<"Mild" | "Moderate" | "Severe">("Moderate");
-  const baseRate = 48.65;
+  const [bankIdx, setBankIdx] = useState(0);
+  const [bankOpen, setBankOpen] = useState(false);
+  const activeBank = banks[bankIdx];
+  const baseRate = activeBank.r;
   const sevMax = severity === "Mild" ? 8 : severity === "Moderate" ? 20 : 50;
   const [pct, setPct] = useState(15);
-  const stressed = useMemo(() => baseRate * (1 + pct / 100), [pct]);
-  const baseImpact = -6.8;
-  const netImpact = useMemo(() => baseImpact - (pct / 100) * 56, [pct]);
-  const incremental = netImpact - baseImpact;
+  const stressed = useMemo(() => baseRate * (1 + pct / 100), [baseRate, pct]);
+  // USD outstanding exposure (millions). MTM = -outstanding * (rate move). Baseline at 0% is 0.
+  const usdExposureM = 58.1;
+  const netImpact = useMemo(() => -(usdExposureM * pct) / 100, [pct]);
+  const baselineMtm = -6.8 * (baseRate / 48.65); // baseline MTM scales mildly with bank rate
+  const incremental = netImpact - baselineMtm;
   const stressLevel = pct >= 30 ? "CRITICAL" : pct >= 15 ? "ELEVATED" : "STABLE";
   const stressTone = pct >= 30 ? "destructive" : pct >= 15 ? "warning" : "success";
   const solvency = Math.max(0, Math.min(100, 100 - pct * 2.4));
@@ -35,29 +40,85 @@ function FxRisk() {
         subtitle="Monitor USD/EGP fluctuations and evaluate stress impact on unpaid commodity contracts."
       />
 
-      <Section title="Bank Exchange Rates (USD/EGP)" actions={<span className="text-xs text-muted-foreground">Last Update: Oct 24, 14:30 EET</span>}>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-          {banks.map((x) => (
-            <div key={x.b} className={`rounded-md border p-3 ${x.active ? "border-accent bg-accent/5 ring-amber-glow" : "border-border"}`}>
-              <div className="flex items-center justify-between text-[11px] uppercase tracking-wide text-muted-foreground">
-                <span className="font-semibold">{x.b}</span>
-                <span className={x.d.startsWith("-") ? "text-destructive" : "text-success"}>{x.d}</span>
-              </div>
-              <div className="mt-1 font-mono-num text-2xl font-bold">{x.r}</div>
-              {x.active && <div className="text-[10px] font-semibold uppercase text-accent-foreground">Active</div>}
-              <div className="mt-1 text-[10px] text-muted-foreground">{x.sub}</div>
+      <Section
+        title="Bank Exchange Rates (USD/EGP)"
+        actions={
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">Last Update: Oct 24, 14:30 EET</span>
+            <div className="relative">
+              <button
+                onClick={() => setBankOpen((o) => !o)}
+                className="inline-flex items-center gap-2 rounded-md border border-accent bg-accent/10 px-3 py-1.5 text-xs font-semibold hover:bg-accent/20 transition-colors"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                Pricing Source: <span className="font-bold">{activeBank.b}</span>
+                <span className="font-mono-num text-accent-foreground">{activeBank.r.toFixed(4)}</span>
+                <svg className={`h-3 w-3 transition-transform ${bankOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor"><path d="M5.5 7.5l4.5 4.5 4.5-4.5z"/></svg>
+              </button>
+              {bankOpen && (
+                <div className="absolute right-0 top-full z-30 mt-1 w-72 overflow-hidden rounded-md border border-border bg-card shadow-lg">
+                  {banks.map((x, i) => (
+                    <button
+                      key={x.b}
+                      onClick={() => {
+                        setBankIdx(i);
+                        setBankOpen(false);
+                        toast.success(`Repriced against ${x.b} · ${x.r.toFixed(4)} EGP/USD`);
+                      }}
+                      className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs hover:bg-secondary/60 ${i === bankIdx ? "bg-secondary/40" : ""}`}
+                    >
+                      <div>
+                        <div className="font-semibold">{x.b}</div>
+                        <div className="text-[10px] text-muted-foreground">{x.sub}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-mono-num font-bold">{x.r.toFixed(4)}</div>
+                        <div className={`text-[10px] ${x.d.startsWith("-") ? "text-destructive" : "text-success"}`}>{x.d}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          ))}
+          </div>
+        }
+      >
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          {banks.map((x, i) => {
+            const active = i === bankIdx;
+            return (
+              <button
+                key={x.b}
+                onClick={() => {
+                  setBankIdx(i);
+                  toast.success(`Repriced against ${x.b} · ${x.r.toFixed(4)} EGP/USD`);
+                }}
+                className={`text-left rounded-md border p-3 transition-all ${active ? "border-accent bg-accent/5 ring-amber-glow scale-[1.02]" : "border-border hover:border-accent/50 hover:bg-secondary/40"}`}
+              >
+                <div className="flex items-center justify-between text-[11px] uppercase tracking-wide text-muted-foreground">
+                  <span className="font-semibold">{x.b}</span>
+                  <span className={x.d.startsWith("-") ? "text-destructive" : "text-success"}>{x.d}</span>
+                </div>
+                <div className="mt-1 font-mono-num text-2xl font-bold">{x.r.toFixed(2)}</div>
+                {active ? (
+                  <div className="text-[10px] font-semibold uppercase text-accent-foreground">Active</div>
+                ) : (
+                  <div className="text-[10px] font-semibold uppercase text-muted-foreground/60">Click to select</div>
+                )}
+                <div className="mt-1 text-[10px] text-muted-foreground">{x.sub}</div>
+              </button>
+            );
+          })}
         </div>
       </Section>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-4">
-        <StatCard label="Total USD Liability" value="$58.1M" delta="+12.4% vs last week" tone="warning"
+        <StatCard label="Total USD Liability" value="$58.1M" delta={`@ ${activeBank.b} ${baseRate.toFixed(4)}`} tone="warning"
           spark={<Spark data={[40,42,48,50,53,55,58]} color="oklch(0.58 0.22 27)" />} />
-        <StatCard label="FX MTM Impact" value="-$6.8M" delta="Unrealized EGP loss" tone="destructive"
+        <StatCard label="EGP Equivalent" value={`E£${(usdExposureM * baseRate).toFixed(1)}M`} delta={`Bank: ${activeBank.b}`} tone="default"
+          spark={<Spark data={[40,42,48,50,53,55,58].map(v => v * baseRate / 10)} color="oklch(0.55 0.18 250)" />} />
+        <StatCard label="FX MTM Impact" value={`$${baselineMtm.toFixed(1)}M`} delta="Unrealized EGP loss" tone="destructive"
           spark={<Spark data={[1,-1,-2,-3,-5,-6,-7]} color="oklch(0.58 0.22 27)" />} />
-        <StatCard label="Value-at-Risk (95%)" value="$3.4M" hint="Daily Exposure Limit"
-          spark={<Spark data={[3,3.2,3.1,3.4,3.3,3.5,3.4]} color="oklch(0.55 0.18 250)" />} />
         <div className="rounded-lg bg-hero-navy p-4 text-primary-foreground">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent">
             <Sparkles className="h-3.5 w-3.5" /> AI Risk Intelligence
@@ -131,26 +192,36 @@ function FxRisk() {
           </div>
         </Section>
 
-        <Section title="Scenario Comparison">
-          <div className="space-y-4 text-xs">
-            <div className="flex justify-between font-semibold uppercase text-muted-foreground"><span>Open Accounts Payable</span><span>EGP Billion</span></div>
-            <div>
-              <div className="flex justify-between"><span>BASE</span><span className="font-mono-num">2.82</span></div>
-              <div className="mt-1 h-3 rounded bg-primary/80" style={{ width: "75%" }} />
-              <div className="mt-2 flex justify-between"><span>STRESSED</span><span className="font-mono-num">3.24</span></div>
-              <div className="mt-1 h-3 rounded bg-destructive" style={{ width: "92%" }} />
-            </div>
-            <div className="flex justify-between font-semibold uppercase text-muted-foreground pt-2"><span>Outstanding Contracts</span><span>EGP Billion</span></div>
-            <div>
-              <div className="flex justify-between"><span>BASE</span><span className="font-mono-num">1.95</span></div>
-              <div className="mt-1 h-3 rounded bg-primary/80" style={{ width: "55%" }} />
-              <div className="mt-2 flex justify-between"><span>STRESSED</span><span className="font-mono-num">3.03</span></div>
-              <div className="mt-1 h-3 rounded bg-destructive" style={{ width: "85%" }} />
-            </div>
-            <div className="rounded-md bg-secondary/50 p-2 text-[11px] leading-relaxed text-muted-foreground">
-              <span className="font-semibold text-foreground">Observation:</span> Moderate stress scenario shifts $2.4B EGP from low-risk to high-risk liquidity buckets. Immediate hedging of Q4 contracts recommended.
-            </div>
-          </div>
+        <Section title={`Scenario Comparison · ${activeBank.b}`}>
+          {(() => {
+            const apUsd = 58.1;
+            const ocUsd = 62.0;
+            const apBase = (apUsd * baseRate) / 1000;
+            const apStress = (apUsd * stressed) / 1000;
+            const ocBase = (ocUsd * baseRate) / 1000;
+            const ocStress = (ocUsd * stressed) / 1000;
+            return (
+              <div className="space-y-4 text-xs">
+                <div className="flex justify-between font-semibold uppercase text-muted-foreground"><span>Open Accounts Payable</span><span>EGP Billion</span></div>
+                <div>
+                  <div className="flex justify-between"><span>BASE</span><span className="font-mono-num">{apBase.toFixed(2)}</span></div>
+                  <div className="mt-1 h-3 rounded bg-primary/80 transition-all" style={{ width: "75%" }} />
+                  <div className="mt-2 flex justify-between"><span>STRESSED</span><span className="font-mono-num">{apStress.toFixed(2)}</span></div>
+                  <div className="mt-1 h-3 rounded bg-destructive transition-all" style={{ width: `${Math.min(100, 75 * (apStress / apBase))}%` }} />
+                </div>
+                <div className="flex justify-between font-semibold uppercase text-muted-foreground pt-2"><span>Outstanding Contracts</span><span>EGP Billion</span></div>
+                <div>
+                  <div className="flex justify-between"><span>BASE</span><span className="font-mono-num">{ocBase.toFixed(2)}</span></div>
+                  <div className="mt-1 h-3 rounded bg-primary/80 transition-all" style={{ width: "55%" }} />
+                  <div className="mt-2 flex justify-between"><span>STRESSED</span><span className="font-mono-num">{ocStress.toFixed(2)}</span></div>
+                  <div className="mt-1 h-3 rounded bg-destructive transition-all" style={{ width: `${Math.min(100, 55 * (ocStress / ocBase))}%` }} />
+                </div>
+                <div className="rounded-md bg-secondary/50 p-2 text-[11px] leading-relaxed text-muted-foreground">
+                  <span className="font-semibold text-foreground">Observation:</span> {severity} stress at {activeBank.b} reprices {pct.toFixed(1)}% of USD/EGP, shifting E£{((apStress + ocStress) - (apBase + ocBase)).toFixed(2)}B from low-risk to high-risk liquidity buckets.
+                </div>
+              </div>
+            );
+          })()}
         </Section>
       </div>
 
@@ -181,23 +252,27 @@ function FxRisk() {
             </thead>
             <tbody className="divide-y divide-border">
               {[
-                ["C-2024-889","Cargill Inc.","Corn","25,000","Oct 20, 2024","12,450,000","605,692,500","+98.8M","Overdue","destructive"],
-                ["C-2024-912","Bunge Global","Soybeans","18,500","Nov 05, 2024","9,820,000","477,743,000","+71.6M","Due Soon","warning"],
-                ["C-2024-945","ADM","Wheat","42,000","Nov 28, 2024","15,200,000","739,480,000","+118.9M","Future","info"],
-                ["C-2024-998","Louis Dreyfus","Corn","12,000","Dec 12, 2024","5,800,000","282,170,000","+42.3M","Future","info"],
-              ].map((r) => (
-                <tr key={r[0]}>
-                  <td className="py-3 pr-3 font-mono-num text-xs text-info">{r[0]}</td>
-                  <td className="py-3 pr-3 font-medium">{r[1]}</td>
-                  <td className="py-3 pr-3"><Badge variant="neutral">{r[2]}</Badge></td>
-                  <td className="py-3 pr-3 text-right font-mono-num">{r[3]}</td>
-                  <td className="py-3 pr-3 text-muted-foreground">{r[4]}</td>
-                  <td className="py-3 pr-3 text-right font-mono-num">{r[5]}</td>
-                  <td className="py-3 pr-3 text-right font-mono-num">{r[6]}</td>
-                  <td className="py-3 pr-3 text-right font-mono-num text-destructive">{r[7]}</td>
-                  <td className="py-3"><Badge variant={r[9] as any}>{r[8]}</Badge></td>
-                </tr>
-              ))}
+                { id: "C-2024-889", sup: "Cargill Inc.", com: "Corn", qty: "25,000", due: "Oct 20, 2024", usd: 12_450_000, status: "Overdue", tone: "destructive" },
+                { id: "C-2024-912", sup: "Bunge Global", com: "Soybeans", qty: "18,500", due: "Nov 05, 2024", usd: 9_820_000, status: "Due Soon", tone: "warning" },
+                { id: "C-2024-945", sup: "ADM", com: "Wheat", qty: "42,000", due: "Nov 28, 2024", usd: 15_200_000, status: "Future", tone: "info" },
+                { id: "C-2024-998", sup: "Louis Dreyfus", com: "Corn", qty: "12,000", due: "Dec 12, 2024", usd: 5_800_000, status: "Future", tone: "info" },
+              ].map((r) => {
+                const egp = r.usd * baseRate;
+                const stressImpact = r.usd * (stressed - baseRate);
+                return (
+                  <tr key={r.id}>
+                    <td className="py-3 pr-3 font-mono-num text-xs text-info">{r.id}</td>
+                    <td className="py-3 pr-3 font-medium">{r.sup}</td>
+                    <td className="py-3 pr-3"><Badge variant="neutral">{r.com}</Badge></td>
+                    <td className="py-3 pr-3 text-right font-mono-num">{r.qty}</td>
+                    <td className="py-3 pr-3 text-muted-foreground">{r.due}</td>
+                    <td className="py-3 pr-3 text-right font-mono-num">${r.usd.toLocaleString()}</td>
+                    <td className="py-3 pr-3 text-right font-mono-num">E£{egp.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                    <td className="py-3 pr-3 text-right font-mono-num text-destructive">+E£{(stressImpact / 1_000_000).toFixed(1)}M</td>
+                    <td className="py-3"><Badge variant={r.tone as any}>{r.status}</Badge></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           <div className="mt-3 text-xs text-muted-foreground">Showing 4 of 28 Active Exposure items</div>
