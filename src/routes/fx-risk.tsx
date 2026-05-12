@@ -65,7 +65,7 @@ function FxRisk() {
           <p className="mt-2 text-xs leading-relaxed text-primary-foreground/85">
             "The current FX exposure risk is elevated due to increased unpaid soybean meal contracts combined with rising USD/EGP volatility and weak hedge coverage."
           </p>
-          <button className="mt-3 inline-flex items-center gap-1 rounded-md bg-accent px-2.5 py-1.5 text-[11px] font-semibold text-accent-foreground">
+          <button onClick={() => { navigate({ to: "/ai-analyzer" }); }} className="mt-3 inline-flex items-center gap-1 rounded-md bg-accent px-2.5 py-1.5 text-[11px] font-semibold text-accent-foreground hover:bg-accent/90 transition-colors">
             View Strategic Recommendations →
           </button>
         </div>
