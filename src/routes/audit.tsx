@@ -21,6 +21,8 @@ function Audit() {
   const [open, setOpen] = useState(false);
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [dragOver, setDragOver] = useState(false);
+  const [decision, setDecision] = useState<null | "approved" | "rejected">(null);
+  const [confirming, setConfirming] = useState<null | "approve" | "reject">(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const addFiles = (list: FileList | null) => {
