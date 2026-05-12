@@ -16,6 +16,18 @@ const banks = [
 ];
 
 function FxRisk() {
+  const navigate = useNavigate();
+  const [severity, setSeverity] = useState<"Mild" | "Moderate" | "Severe">("Moderate");
+  const baseRate = 48.65;
+  const sevMax = severity === "Mild" ? 8 : severity === "Moderate" ? 20 : 50;
+  const [pct, setPct] = useState(15);
+  const stressed = useMemo(() => baseRate * (1 + pct / 100), [pct]);
+  const baseImpact = -6.8;
+  const netImpact = useMemo(() => baseImpact - (pct / 100) * 56, [pct]);
+  const incremental = netImpact - baseImpact;
+  const stressLevel = pct >= 30 ? "CRITICAL" : pct >= 15 ? "ELEVATED" : "STABLE";
+  const stressTone = pct >= 30 ? "destructive" : pct >= 15 ? "warning" : "success";
+  const solvency = Math.max(0, Math.min(100, 100 - pct * 2.4));
   return (
     <>
       <PageHeader
