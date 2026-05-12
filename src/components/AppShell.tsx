@@ -101,13 +101,16 @@ export function AppShell() {
             />
           </div>
           <nav className="hidden items-center gap-5 text-sm text-muted-foreground md:flex">
-            <a className="hover:text-foreground">Markets</a>
-            <a className="hover:text-foreground">Liquidity</a>
-            <a className="hover:text-foreground">Reporting</a>
+            <button onClick={() => { navigate({ to: "/ai-analyzer" }); }} className="hover:text-foreground">Markets</button>
+            <button onClick={() => { navigate({ to: "/fx-risk" }); }} className="hover:text-foreground">Liquidity</button>
+            <button onClick={() => { navigate({ to: "/reports" }); }} className="hover:text-foreground">Reporting</button>
           </nav>
-          <button className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary"><Bell className="h-4 w-4" /></button>
-          <button className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary"><HelpCircle className="h-4 w-4" /></button>
-          <button className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground shadow-sm">
+          <button onClick={() => toast.info("3 new alerts · 1 critical hedge gap")} className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary"><Bell className="h-4 w-4" /></button>
+          <button onClick={() => toast.info("Press ⌘K for shortcuts · docs.grainrisk.io")} className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary"><HelpCircle className="h-4 w-4" /></button>
+          <button
+            onClick={() => toast.success("Trade ticket queued to OMS · awaiting confirmation")}
+            className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground shadow-sm"
+          >
             Execute Trade
           </button>
           <div className="flex items-center gap-2 rounded-full border border-border bg-secondary/60 py-1 pl-1 pr-3">
