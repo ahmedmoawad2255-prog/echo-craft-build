@@ -13,7 +13,10 @@ function Dashboard() {
         title="Risk Command Center"
         subtitle="Live overview of contracts, FX exposure, hedge positions and AI-detected risk."
         actions={
-          <button className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
+          <button
+            onClick={() => { navigate({ to: "/contracts" }); toast.success("New trade ticket opened"); }}
+            className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
             + New Trade
           </button>
         }
