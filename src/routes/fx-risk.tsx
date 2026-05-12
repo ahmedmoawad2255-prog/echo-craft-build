@@ -75,9 +75,19 @@ function FxRisk() {
         <Section title="FX Stress Testing Center" className="lg:col-span-2"
           actions={
             <div className="flex gap-1 rounded-md bg-secondary p-0.5 text-xs">
-              <button className="rounded px-3 py-1 text-muted-foreground">Mild</button>
-              <button className="rounded bg-card px-3 py-1 font-semibold shadow">Moderate</button>
-              <button className="rounded px-3 py-1 text-muted-foreground">Severe</button>
+              {(["Mild", "Moderate", "Severe"] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => {
+                    setSeverity(s);
+                    const cap = s === "Mild" ? 8 : s === "Moderate" ? 20 : 50;
+                    setPct((p) => Math.min(p, cap));
+                  }}
+                  className={`rounded px-3 py-1 transition-colors ${severity === s ? "bg-card font-semibold shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  {s}
+                </button>
+              ))}
             </div>
           }>
           <div className="grid gap-6 md:grid-cols-2">
