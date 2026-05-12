@@ -67,7 +67,7 @@ function Dashboard() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <Section title="Recent Contract Activity" className="lg:col-span-2"
-          actions={<a className="text-xs text-info hover:underline">View all →</a>}>
+          actions={<Link to="/contracts" className="text-xs text-info hover:underline">View all →</Link>}>
           <div className="divide-y divide-border">
             {[
               { id: "CONT-2024-8842", supplier: "Al-Wadi Industries", commodity: "Hard Wheat", val: "$3,875,000", status: "PARTIALLY PAID", tone: "warning" as const },
