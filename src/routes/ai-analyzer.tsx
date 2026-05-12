@@ -1,10 +1,89 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState, useMemo } from "react";
 import { PageHeader, Section, Badge } from "@/components/ui-bits";
 import { Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/ai-analyzer")({ component: AIAnalyzer });
 
+const FOCUS = ["All", "Wheat", "Corn", "Soybeans"] as const;
+type Focus = typeof FOCUS[number];
+
+const FOCUS_DATA: Record<Focus, {
+  sentiment: string; pct: number; tone: "success" | "destructive" | "warning";
+  summary: string;
+  risks: { label: string; level: string; pct: number; tone: "destructive" | "warning" | "success" }[];
+  rows: [string, string, string, string, string, string][];
+  ai: string;
+  headline: string;
+  body: string;
+}> = {
+  All: {
+    sentiment: "Mixed", pct: 58, tone: "warning",
+    summary: "Cross-commodity signals show divergent flows: wheat strength offset by corn weakness; soy range-bound on Brazil supply.",
+    risks: [
+      { label: "Weather (S. America)", level: "CRITICAL", pct: 88, tone: "destructive" },
+      { label: "Geopolitical Conflict", level: "MODERATE", pct: 55, tone: "warning" },
+      { label: "Freight & Logistics", level: "ELEVATED", pct: 62, tone: "warning" },
+    ],
+    rows: [
+      ["Wheat Ending Stocks (Global)", "257.7M MT", "258.5M MT", "-0.31%", "BULLISH", "success"],
+      ["Corn Ending Stocks (US)", "1,999M Bu", "1,980M Bu", "+0.96%", "BEARISH", "destructive"],
+      ["Soybean Prod. (Brazil)", "162.0M MT", "161.7M MT", "+0.62%", "BEARISH", "destructive"],
+    ],
+    ai: "Aggregate signal is mixed. Inter-commodity spreads favor long wheat / short corn pair trade into Q1.",
+    headline: "Cross-Commodity Divergence Defines Q4 Tape",
+    body: "Wheat firmness from MENA tenders contrasts with bearish US corn balance sheet revisions, while soy hovers as Brazil weather drives the next leg.",
+  },
+  Wheat: {
+    sentiment: "Bullish", pct: 72, tone: "success",
+    summary: "AI identifies aggressive accumulation in wheat futures, correlated with Egyptian GASC tender activity and supply tightness in Black Sea export hubs.",
+    risks: [
+      { label: "Black Sea Export Risk", level: "CRITICAL", pct: 88, tone: "destructive" },
+      { label: "MENA Tender Demand", level: "HIGH", pct: 78, tone: "warning" },
+    ],
+    rows: [
+      ["Wheat Ending Stocks (Global)", "257.7M MT", "258.5M MT", "-0.31%", "BULLISH", "success"],
+      ["Wheat Production (EU)", "126.2M MT", "127.1M MT", "-0.71%", "BULLISH", "success"],
+    ],
+    ai: "Negative deviation in global wheat stocks confirms underlying supply fragility. Hedge positions should focus on Dec '24 wheat contracts.",
+    headline: "Global Dynamics: Egyptian Demand Pressure vs. Improved US Weather Outlook",
+    body: "Egypt's GASC has intensified its tender cycle, revealing a broader strategic deficit in North African reserves. Black Sea dryness continues to degrade yield expectations, sustaining the bullish momentum in CBT contracts.",
+  },
+  Corn: {
+    sentiment: "Bearish", pct: 64, tone: "destructive",
+    summary: "Improving US weather and a bumper South American outlook are pressuring CBOT corn into year-end. Ethanol margins remain the swing factor.",
+    risks: [
+      { label: "US Yield Upside", level: "ELEVATED", pct: 70, tone: "warning" },
+      { label: "Ethanol Margin Compression", level: "MODERATE", pct: 48, tone: "warning" },
+    ],
+    rows: [
+      ["Corn Ending Stocks (US)", "1,999M Bu", "1,980M Bu", "+0.96%", "BEARISH", "destructive"],
+      ["Corn Production (Brazil)", "127.0M MT", "126.0M MT", "+0.79%", "BEARISH", "destructive"],
+    ],
+    ai: "Stocks-to-use ratio expansion suggests downside risk to $4.15/bu support. Reduce length on rallies into USDA print.",
+    headline: "Corn Pressured by Stocks Build and Benign US Weather",
+    body: "Improving climatic moisture across the Western Hemisphere combined with elevated South American forecasts continues to weigh on the CBOT corn curve.",
+  },
+  Soybeans: {
+    sentiment: "Neutral", pct: 51, tone: "warning",
+    summary: "Soy complex is range-bound: Chinese crush demand offsets Brazilian record-production expectations. Watch the Real and CONAB revisions.",
+    risks: [
+      { label: "Brazil Production Risk", level: "HIGH", pct: 74, tone: "warning" },
+      { label: "China Crush Demand", level: "STABLE", pct: 50, tone: "success" },
+    ],
+    rows: [
+      ["Soybean Prod. (Brazil)", "162.0M MT", "161.7M MT", "+0.62%", "BEARISH", "destructive"],
+      ["Soybean Crush (China)", "9.8M MT", "9.6M MT", "+2.08%", "BULLISH", "success"],
+    ],
+    ai: "Range trade favored ($10.20–$10.85). Sell calls into resistance; protect downside with put spreads on CONAB upgrade risk.",
+    headline: "Soy Complex Range-Bound Between Brazil Supply and China Demand",
+    body: "Record-pace Brazilian planting offsets resilient Chinese crush margins. The cross-currency pass-through via BRL remains the dominant macro overlay.",
+  },
+};
+
 function AIAnalyzer() {
+  const [focus, setFocus] = useState<Focus>("Wheat");
+  const data = useMemo(() => FOCUS_DATA[focus], [focus]);
   return (
     <>
       <PageHeader
