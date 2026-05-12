@@ -27,7 +27,7 @@ function Hedge() {
             <div className="text-xs text-muted-foreground">25,000 MT of Wheat (PHY-2024-08) detected without exchange coverage.</div>
           </div>
         </div>
-        <button className="rounded-md bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground">Cover Now</button>
+        <button onClick={() => toast.success("Cover order routed: 500 ZW Sep '24 lots")} className="rounded-md bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground hover:bg-destructive/90 transition-colors">Cover Now</button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
