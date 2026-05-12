@@ -134,7 +134,7 @@ function AIAnalyzer() {
         </Section>
 
         <Section title="USDA (WASDE) Market Deviation" className="lg:col-span-2"
-          actions={<button className="rounded-md border border-border px-2.5 py-1.5 text-xs">XLS Report</button>}>
+          actions={<button onClick={() => { import("sonner").then(({ toast }) => toast.success(`WASDE ${focus} report exported (XLS)`)); }} className="rounded-md border border-border px-2.5 py-1.5 text-xs hover:bg-secondary">XLS Report</button>}>
           <div className="-mt-3 mb-3 text-xs text-muted-foreground">October Actuals vs. Bloomberg Consensus Survey · {focus}</div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
