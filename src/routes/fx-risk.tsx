@@ -252,23 +252,27 @@ function FxRisk() {
             </thead>
             <tbody className="divide-y divide-border">
               {[
-                ["C-2024-889","Cargill Inc.","Corn","25,000","Oct 20, 2024","12,450,000","605,692,500","+98.8M","Overdue","destructive"],
-                ["C-2024-912","Bunge Global","Soybeans","18,500","Nov 05, 2024","9,820,000","477,743,000","+71.6M","Due Soon","warning"],
-                ["C-2024-945","ADM","Wheat","42,000","Nov 28, 2024","15,200,000","739,480,000","+118.9M","Future","info"],
-                ["C-2024-998","Louis Dreyfus","Corn","12,000","Dec 12, 2024","5,800,000","282,170,000","+42.3M","Future","info"],
-              ].map((r) => (
-                <tr key={r[0]}>
-                  <td className="py-3 pr-3 font-mono-num text-xs text-info">{r[0]}</td>
-                  <td className="py-3 pr-3 font-medium">{r[1]}</td>
-                  <td className="py-3 pr-3"><Badge variant="neutral">{r[2]}</Badge></td>
-                  <td className="py-3 pr-3 text-right font-mono-num">{r[3]}</td>
-                  <td className="py-3 pr-3 text-muted-foreground">{r[4]}</td>
-                  <td className="py-3 pr-3 text-right font-mono-num">{r[5]}</td>
-                  <td className="py-3 pr-3 text-right font-mono-num">{r[6]}</td>
-                  <td className="py-3 pr-3 text-right font-mono-num text-destructive">{r[7]}</td>
-                  <td className="py-3"><Badge variant={r[9] as any}>{r[8]}</Badge></td>
-                </tr>
-              ))}
+                { id: "C-2024-889", sup: "Cargill Inc.", com: "Corn", qty: "25,000", due: "Oct 20, 2024", usd: 12_450_000, status: "Overdue", tone: "destructive" },
+                { id: "C-2024-912", sup: "Bunge Global", com: "Soybeans", qty: "18,500", due: "Nov 05, 2024", usd: 9_820_000, status: "Due Soon", tone: "warning" },
+                { id: "C-2024-945", sup: "ADM", com: "Wheat", qty: "42,000", due: "Nov 28, 2024", usd: 15_200_000, status: "Future", tone: "info" },
+                { id: "C-2024-998", sup: "Louis Dreyfus", com: "Corn", qty: "12,000", due: "Dec 12, 2024", usd: 5_800_000, status: "Future", tone: "info" },
+              ].map((r) => {
+                const egp = r.usd * baseRate;
+                const stressImpact = r.usd * (stressed - baseRate);
+                return (
+                  <tr key={r.id}>
+                    <td className="py-3 pr-3 font-mono-num text-xs text-info">{r.id}</td>
+                    <td className="py-3 pr-3 font-medium">{r.sup}</td>
+                    <td className="py-3 pr-3"><Badge variant="neutral">{r.com}</Badge></td>
+                    <td className="py-3 pr-3 text-right font-mono-num">{r.qty}</td>
+                    <td className="py-3 pr-3 text-muted-foreground">{r.due}</td>
+                    <td className="py-3 pr-3 text-right font-mono-num">${r.usd.toLocaleString()}</td>
+                    <td className="py-3 pr-3 text-right font-mono-num">E£{egp.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                    <td className="py-3 pr-3 text-right font-mono-num text-destructive">+E£{(stressImpact / 1_000_000).toFixed(1)}M</td>
+                    <td className="py-3"><Badge variant={r.tone as any}>{r.status}</Badge></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           <div className="mt-3 text-xs text-muted-foreground">Showing 4 of 28 Active Exposure items</div>
