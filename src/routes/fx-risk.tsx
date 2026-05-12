@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { PageHeader, Section, Badge, StatCard, Spark } from "@/components/ui-bits";
 import { Sparkles } from "lucide-react";
 
