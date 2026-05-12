@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { PageHeader, StatCard, Section, Badge, Spark } from "@/components/ui-bits";
 import { Sparkles, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
