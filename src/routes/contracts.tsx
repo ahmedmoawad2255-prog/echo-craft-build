@@ -281,7 +281,7 @@ function ExcelUpload({
   preview: Row[] | null;
   onParse: (rows: Row[]) => void;
   onConfirm: () => void;
-  fileRef: React.RefObject<HTMLInputElement>;
+  fileRef: React.RefObject<HTMLInputElement | null>;
 }) {
   const handleFile = async (file: File) => {
     try {
