@@ -330,8 +330,8 @@ function Hedge() {
                 const linked = PHYS.filter((p) => h.physIds.includes(p.id));
                 const sm = stressMtm(h);
                 return (
-                  <>
-                    <tr key={h.id} className="hover:bg-muted/30 cursor-pointer" onClick={() => setExpanded(expanded === h.id ? null : h.id)}>
+                  <Fragment key={h.id}>
+                    <tr className="hover:bg-muted/30 cursor-pointer" onClick={() => setExpanded(expanded === h.id ? null : h.id)}>
                       <td className="py-3 pl-3"><ChevronRight className={`h-3 w-3 transition-transform ${expanded === h.id ? "rotate-90" : ""}`} /></td>
                       <td className="py-3 pr-3"><div className="font-medium">{h.ref}</div><div className="text-[11px] text-muted-foreground">{h.id}</div></td>
                       <td className="py-3 pr-3"><Badge variant="neutral">{h.exchange}</Badge></td>
