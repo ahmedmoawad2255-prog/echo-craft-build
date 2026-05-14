@@ -246,7 +246,7 @@ function FxRisk() {
                   <div className="mt-1 h-3 rounded bg-destructive transition-all" style={{ width: `${Math.min(100, 55 * (ocStress / ocBase))}%` }} />
                 </div>
                 <div className="rounded-md bg-secondary/50 p-2 text-[11px] leading-relaxed text-muted-foreground">
-                  <span className="font-semibold text-foreground">Observation:</span> {severity} stress at {activeBank.b} reprices {pct.toFixed(1)}% of USD/EGP, shifting E£{((apStress + ocStress) - (apBase + ocBase)).toFixed(2)}B from low-risk to high-risk liquidity buckets.
+                  <span className="font-semibold text-foreground">What this means:</span> Under a {severity.toLowerCase()} +{pct.toFixed(1)}% USD move priced via {activeBank.b}, payables and open contracts together cost an extra <span className="font-mono-num font-semibold text-destructive">E£{((apStress + ocStress) - (apBase + ocBase)).toFixed(2)}B</span>. {pct >= 30 ? "Action: lock forward cover today." : pct >= 15 ? "Action: review hedge ratios this week." : "Action: monitor; no immediate hedge required."}
                 </div>
               </div>
             );
