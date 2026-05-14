@@ -154,9 +154,16 @@ function FxRisk() {
               ))}
             </div>
           }>
+          <p className="mb-4 text-xs text-muted-foreground leading-relaxed">
+            Simulate how USD appreciation impacts unpaid contracts, liquidity, and FX exposure.
+            <span className="ml-1 text-foreground/80"><span className="font-semibold">Base</span> = current market rates · <span className="font-semibold">Stressed</span> = simulated USD/EGP move.</span>
+          </p>
           <div className="grid gap-6 md:grid-cols-2">
             <div>
-              <div className="text-xs uppercase tracking-wide text-muted-foreground">USD Appreciation %</div>
+              <div className="flex items-center justify-between text-xs uppercase tracking-wide text-muted-foreground">
+                <span>USD Appreciation %</span>
+                <span className={`rounded px-2 py-0.5 text-[10px] font-semibold ${severity === "Severe" ? "bg-destructive/15 text-destructive" : severity === "Moderate" ? "bg-accent/20 text-accent-foreground" : "bg-success/15 text-success"}`}>{severity} scenario</span>
+              </div>
               <div className="mt-1 font-mono-num text-3xl font-bold">+{pct.toFixed(1)}%</div>
               <input
                 type="range"
@@ -165,16 +172,17 @@ function FxRisk() {
                 step={0.5}
                 value={pct}
                 onChange={(e) => setPct(parseFloat(e.target.value))}
-                className="mt-3 w-full accent-[oklch(0.78_0.16_75)]"
+                className="mt-3 h-2 w-full accent-[oklch(0.78_0.16_75)]"
               />
               <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
-                <span>Current ({baseRate.toFixed(2)})</span>
+                <span>Base ({baseRate.toFixed(2)})</span>
                 <span>Max ({(baseRate * (1 + sevMax / 100)).toFixed(2)}) · {severity}</span>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <div className="rounded-md border border-border p-2">
                   <div className="text-[10px] uppercase text-muted-foreground">Stressed EGP Rate</div>
                   <div className="font-mono-num text-lg font-semibold">{stressed.toFixed(4)}</div>
+                  <div className="text-[10px] text-muted-foreground">vs base {baseRate.toFixed(4)}</div>
                 </div>
                 <div className={`rounded-md border border-border p-2 ${stressTone === "destructive" ? "bg-destructive/10" : stressTone === "warning" ? "bg-accent/10" : "bg-success/10"}`}>
                   <div className={`text-[10px] uppercase ${stressTone === "destructive" ? "text-destructive" : stressTone === "warning" ? "text-accent-foreground" : "text-success"}`}>Liquidity Stress</div>
@@ -182,16 +190,34 @@ function FxRisk() {
                 </div>
               </div>
             </div>
-            <div className="rounded-md bg-secondary/40 p-4">
-              <div className="text-xs uppercase tracking-wide text-destructive">Recalculated Net Impact</div>
-              <div className="mt-2 font-mono-num text-4xl font-bold text-destructive">${netImpact.toFixed(1)}M</div>
-              <div className="mt-1 text-xs text-muted-foreground">⚠ Incremental Loss: ${Math.abs(incremental).toFixed(1)}M</div>
-              <div className="mt-4 text-[11px] uppercase text-muted-foreground">Solvency Gauge</div>
-              <div className="mt-2 h-2 rounded-full bg-secondary">
-                <div className={`h-full rounded-full transition-all ${solvency < 40 ? "bg-destructive" : solvency < 70 ? "bg-accent" : "bg-success"}`} style={{ width: `${solvency}%` }} />
+            <div className="space-y-3">
+              <div className="rounded-md border border-border bg-secondary/30 p-3">
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Current Exposure (Base)</div>
+                <div className="mt-1 font-mono-num text-2xl font-semibold">${baselineMtm.toFixed(1)}M</div>
+                <div className="text-[11px] text-muted-foreground">Already incurred at today's rate.</div>
               </div>
-              <div className="mt-1 text-right text-xs font-mono-num">{solvency.toFixed(0)}%</div>
+              <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3">
+                <div className="text-[11px] uppercase tracking-wide text-destructive">Estimated Additional FX Loss</div>
+                <div className="mt-1 font-mono-num text-3xl font-bold text-destructive">${Math.abs(incremental).toFixed(1)}M</div>
+                <div className="text-[11px] text-muted-foreground">Projected additional loss under {severity.toLowerCase()} stress (+{pct.toFixed(1)}% USD).</div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between text-[11px] uppercase tracking-wide text-muted-foreground">
+                  <span>Liquidity Coverage Level</span>
+                  <span className="font-mono-num">{solvency.toFixed(0)}%</span>
+                </div>
+                <div className="mt-2 h-2 rounded-full bg-secondary">
+                  <div className={`h-full rounded-full transition-all ${solvency < 40 ? "bg-destructive" : solvency < 70 ? "bg-accent" : "bg-success"}`} style={{ width: `${solvency}%` }} />
+                </div>
+                <div className="mt-1 text-[11px] text-muted-foreground">Estimated ability to absorb FX-related payment pressure.</div>
+              </div>
             </div>
+          </div>
+          <div className="mt-4 rounded-md border-l-2 border-accent bg-secondary/40 p-3 text-xs leading-relaxed">
+            <span className="font-semibold text-foreground">Risk Summary: </span>
+            A +{pct.toFixed(1)}% USD move at {activeBank.b} increases payable exposure by{" "}
+            <span className="font-mono-num font-semibold text-destructive">E£{(usdExposureM * (stressed - baseRate)).toFixed(0)}M</span>
+            {pct >= 30 ? " — critical liquidity strain expected; pre-fund or hedge immediately." : pct >= 15 ? " — material strain on cash; consider partial forward cover." : " — manageable within current cash buffers."}
           </div>
         </Section>
 
