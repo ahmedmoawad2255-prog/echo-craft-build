@@ -27,9 +27,11 @@ function FxRisk() {
   const stressed = useMemo(() => baseRate * (1 + pct / 100), [baseRate, pct]);
   // USD outstanding exposure (millions). MTM = -outstanding * (rate move). Baseline at 0% is 0.
   const usdExposureM = 58.1;
-  const netImpact = useMemo(() => -(usdExposureM * pct) / 100, [pct]);
-  const baselineMtm = -6.8 * (baseRate / 48.65); // baseline MTM scales mildly with bank rate
-  const incremental = netImpact - baselineMtm;
+  const baselineMtm = -6.8 * (baseRate / 48.65); // current unrealized FX loss at today's rate
+  // Additional loss is purely the incremental impact of the stress move (0 when pct = 0)
+  const additionalLoss = useMemo(() => -(usdExposureM * pct) / 100, [pct]);
+  const totalSimulated = baselineMtm + additionalLoss;
+  const netImpact = additionalLoss; // kept for downstream references
   const stressLevel = pct >= 30 ? "CRITICAL" : pct >= 15 ? "ELEVATED" : "STABLE";
   const stressTone = pct >= 30 ? "destructive" : pct >= 15 ? "warning" : "success";
   const solvency = Math.max(0, Math.min(100, 100 - pct * 2.4));
