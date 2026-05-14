@@ -114,17 +114,21 @@ function FxRisk() {
         </div>
       </Section>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard label="Outstanding USD Payables" value="$58.1M" delta={`@ ${activeBank.b} ${baseRate.toFixed(4)}`} tone="warning"
           hint="Total unpaid supplier obligations in USD."
           spark={<Spark data={[40,42,48,50,53,55,58]} color="oklch(0.58 0.22 27)" />} />
         <StatCard label="Current EGP Exposure" value={`E£${(usdExposureM * baseRate).toFixed(1)}M`} delta={`Bank: ${activeBank.b}`} tone="default"
           hint="Estimated EGP value using selected bank exchange rate."
           spark={<Spark data={[40,42,48,50,53,55,58].map(v => v * baseRate / 10)} color="oklch(0.55 0.18 250)" />} />
-        <StatCard label="Unrealized FX Exposure Loss" value={`$${baselineMtm.toFixed(1)}M`} delta="Current valuation impact" tone="destructive"
-          hint="Valuation impact caused by USD/EGP movement."
+        <StatCard label="Current Unrealized FX Loss" value={`$${baselineMtm.toFixed(1)}M`} delta="At today's rate" tone="destructive"
+          hint="FX loss already incurred at the current USD/EGP rate."
           spark={<Spark data={[1,-1,-2,-3,-5,-6,-7]} color="oklch(0.58 0.22 27)" />} />
-        <div className="rounded-lg bg-hero-navy p-4 text-primary-foreground">
+        <StatCard label="Additional Stress Scenario Loss" value={`$${Math.abs(additionalLoss).toFixed(1)}M`} delta={pct === 0 ? "No stress applied" : `+${pct.toFixed(1)}% USD`} tone={pct >= 30 ? "destructive" : pct >= 15 ? "warning" : "default"}
+          hint="Incremental FX loss caused by the simulated USD appreciation only." />
+        <StatCard label="Total Simulated FX Exposure" value={`$${Math.abs(totalSimulated).toFixed(1)}M`} delta={pct === 0 ? "= current loss" : `Base + stress`} tone={pct >= 15 ? "destructive" : "warning"}
+          hint="Combined current unrealized loss plus additional stress impact." />
+        <div className="rounded-lg bg-hero-navy p-4 text-primary-foreground xl:col-span-5">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent">
             <Sparkles className="h-3.5 w-3.5" /> AI Risk Intelligence
           </div>
