@@ -184,6 +184,9 @@ function FxRisk() {
                 <span>Base ({baseRate.toFixed(2)})</span>
                 <span>Max ({(baseRate * (1 + sevMax / 100)).toFixed(2)}) · {severity}</span>
               </div>
+              <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+                Stress scenarios simulate additional USD/EGP appreciation above current market rates.
+              </p>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <div className="rounded-md border border-border p-2">
                   <div className="text-[10px] uppercase text-muted-foreground">Stressed EGP Rate</div>
@@ -198,14 +201,19 @@ function FxRisk() {
             </div>
             <div className="space-y-3">
               <div className="rounded-md border border-border bg-secondary/30 p-3">
-                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Current Exposure (Base)</div>
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Current Unrealized FX Loss</div>
                 <div className="mt-1 font-mono-num text-2xl font-semibold">${baselineMtm.toFixed(1)}M</div>
-                <div className="text-[11px] text-muted-foreground">Already incurred at today's rate.</div>
+                <div className="text-[11px] text-muted-foreground">Already incurred at today's USD/EGP rate.</div>
               </div>
-              <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3">
-                <div className="text-[11px] uppercase tracking-wide text-destructive">Estimated Additional FX Loss</div>
-                <div className="mt-1 font-mono-num text-3xl font-bold text-destructive">${Math.abs(incremental).toFixed(1)}M</div>
-                <div className="text-[11px] text-muted-foreground">Projected additional loss under {severity.toLowerCase()} stress (+{pct.toFixed(1)}% USD).</div>
+              <div className={`rounded-md border p-3 ${pct === 0 ? "border-border bg-secondary/30" : "border-destructive/40 bg-destructive/10"}`}>
+                <div className={`text-[11px] uppercase tracking-wide ${pct === 0 ? "text-muted-foreground" : "text-destructive"}`}>Additional Stress Scenario Loss</div>
+                <div className={`mt-1 font-mono-num text-3xl font-bold ${pct === 0 ? "text-foreground" : "text-destructive"}`}>${Math.abs(additionalLoss).toFixed(1)}M</div>
+                <div className="text-[11px] text-muted-foreground">{pct === 0 ? "No stress applied — move the slider to simulate USD appreciation." : `Incremental loss from a ${severity.toLowerCase()} +${pct.toFixed(1)}% USD move only.`}</div>
+              </div>
+              <div className="rounded-md border border-accent/40 bg-accent/10 p-3">
+                <div className="text-[11px] uppercase tracking-wide text-accent-foreground">Total Simulated FX Exposure</div>
+                <div className="mt-1 font-mono-num text-2xl font-bold">${Math.abs(totalSimulated).toFixed(1)}M</div>
+                <div className="text-[11px] text-muted-foreground">Current unrealized loss + additional stress impact.</div>
               </div>
               <div>
                 <div className="flex items-center justify-between text-[11px] uppercase tracking-wide text-muted-foreground">
