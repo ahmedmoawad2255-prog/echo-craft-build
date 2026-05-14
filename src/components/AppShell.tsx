@@ -107,28 +107,38 @@ export function AppShell() {
       {/* Main */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Topbar */}
-        <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-border bg-card/90 px-6 backdrop-blur">
-          <div className="relative max-w-md flex-1">
+        <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-border bg-card/90 px-3 backdrop-blur sm:gap-4 sm:px-4 lg:px-6">
+          <button
+            onClick={() => setMobileOpen((o) => !o)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-secondary lg:hidden"
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+          <div className="relative hidden max-w-md flex-1 sm:block">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               placeholder="Search contracts, markets, suppliers…"
               className="w-full rounded-md border border-border bg-secondary/60 py-1.5 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:border-accent focus:outline-none"
             />
           </div>
-          <nav className="hidden items-center gap-5 text-sm text-muted-foreground md:flex">
+          <div className="flex-1 font-display text-sm font-bold tracking-tight sm:hidden">
+            <span className="text-gradient-amber">GrainRisk</span> Pro
+          </div>
+          <nav className="hidden items-center gap-5 text-sm text-muted-foreground xl:flex">
             <button onClick={() => { navigate({ to: "/ai-analyzer" }); }} className="hover:text-foreground">Markets</button>
             <button onClick={() => { navigate({ to: "/fx-risk" }); }} className="hover:text-foreground">Liquidity</button>
             <button onClick={() => { navigate({ to: "/reports" }); }} className="hover:text-foreground">Reporting</button>
           </nav>
-          <button onClick={() => toast.info("3 new alerts · 1 critical hedge gap")} className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary"><Bell className="h-4 w-4" /></button>
-          <button onClick={() => toast.info("Press ⌘K for shortcuts · docs.grainrisk.io")} className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary"><HelpCircle className="h-4 w-4" /></button>
+          <button onClick={() => toast.info("3 new alerts · 1 critical hedge gap")} className="grid h-9 w-9 place-items-center rounded-md text-muted-foreground hover:bg-secondary"><Bell className="h-4 w-4" /></button>
+          <button onClick={() => toast.info("Press ⌘K for shortcuts · docs.grainrisk.io")} className="hidden h-9 w-9 place-items-center rounded-md text-muted-foreground hover:bg-secondary sm:grid"><HelpCircle className="h-4 w-4" /></button>
           <button
             onClick={() => toast.success("Trade ticket queued to OMS · awaiting confirmation")}
-            className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground shadow-sm"
+            className="hidden rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground shadow-sm sm:inline-flex"
           >
             Execute Trade
           </button>
-          <div className="flex items-center gap-2 rounded-full border border-border bg-secondary/60 py-1 pl-1 pr-3">
+          <div className="flex items-center gap-2 rounded-full border border-border bg-secondary/60 py-1 pl-1 pr-1 sm:pr-3">
             <div className="grid h-6 w-6 place-items-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">CRO</div>
             <div className="hidden text-xs leading-tight md:block">
               <div className="font-semibold">Chief Risk Officer</div>
@@ -136,7 +146,7 @@ export function AppShell() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-x-hidden p-6">
+        <main className="flex-1 overflow-x-hidden p-3 sm:p-4 lg:p-6">
           <Outlet />
         </main>
       </div>
