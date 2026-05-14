@@ -112,12 +112,15 @@ function FxRisk() {
         </div>
       </Section>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-4">
-        <StatCard label="Total USD Liability" value="$58.1M" delta={`@ ${activeBank.b} ${baseRate.toFixed(4)}`} tone="warning"
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Outstanding USD Payables" value="$58.1M" delta={`@ ${activeBank.b} ${baseRate.toFixed(4)}`} tone="warning"
+          hint="Total unpaid supplier obligations in USD."
           spark={<Spark data={[40,42,48,50,53,55,58]} color="oklch(0.58 0.22 27)" />} />
-        <StatCard label="EGP Equivalent" value={`E£${(usdExposureM * baseRate).toFixed(1)}M`} delta={`Bank: ${activeBank.b}`} tone="default"
+        <StatCard label="Current EGP Exposure" value={`E£${(usdExposureM * baseRate).toFixed(1)}M`} delta={`Bank: ${activeBank.b}`} tone="default"
+          hint="Estimated EGP value using selected bank exchange rate."
           spark={<Spark data={[40,42,48,50,53,55,58].map(v => v * baseRate / 10)} color="oklch(0.55 0.18 250)" />} />
-        <StatCard label="FX MTM Impact" value={`$${baselineMtm.toFixed(1)}M`} delta="Unrealized EGP loss" tone="destructive"
+        <StatCard label="Unrealized FX Exposure Loss" value={`$${baselineMtm.toFixed(1)}M`} delta="Current valuation impact" tone="destructive"
+          hint="Valuation impact caused by USD/EGP movement."
           spark={<Spark data={[1,-1,-2,-3,-5,-6,-7]} color="oklch(0.58 0.22 27)" />} />
         <div className="rounded-lg bg-hero-navy p-4 text-primary-foreground">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent">
@@ -151,9 +154,16 @@ function FxRisk() {
               ))}
             </div>
           }>
+          <p className="mb-4 text-xs text-muted-foreground leading-relaxed">
+            Simulate how USD appreciation impacts unpaid contracts, liquidity, and FX exposure.
+            <span className="ml-1 text-foreground/80"><span className="font-semibold">Base</span> = current market rates · <span className="font-semibold">Stressed</span> = simulated USD/EGP move.</span>
+          </p>
           <div className="grid gap-6 md:grid-cols-2">
             <div>
-              <div className="text-xs uppercase tracking-wide text-muted-foreground">USD Appreciation %</div>
+              <div className="flex items-center justify-between text-xs uppercase tracking-wide text-muted-foreground">
+                <span>USD Appreciation %</span>
+                <span className={`rounded px-2 py-0.5 text-[10px] font-semibold ${severity === "Severe" ? "bg-destructive/15 text-destructive" : severity === "Moderate" ? "bg-accent/20 text-accent-foreground" : "bg-success/15 text-success"}`}>{severity} scenario</span>
+              </div>
               <div className="mt-1 font-mono-num text-3xl font-bold">+{pct.toFixed(1)}%</div>
               <input
                 type="range"
@@ -162,16 +172,17 @@ function FxRisk() {
                 step={0.5}
                 value={pct}
                 onChange={(e) => setPct(parseFloat(e.target.value))}
-                className="mt-3 w-full accent-[oklch(0.78_0.16_75)]"
+                className="mt-3 h-2 w-full accent-[oklch(0.78_0.16_75)]"
               />
               <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
-                <span>Current ({baseRate.toFixed(2)})</span>
+                <span>Base ({baseRate.toFixed(2)})</span>
                 <span>Max ({(baseRate * (1 + sevMax / 100)).toFixed(2)}) · {severity}</span>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <div className="rounded-md border border-border p-2">
                   <div className="text-[10px] uppercase text-muted-foreground">Stressed EGP Rate</div>
                   <div className="font-mono-num text-lg font-semibold">{stressed.toFixed(4)}</div>
+                  <div className="text-[10px] text-muted-foreground">vs base {baseRate.toFixed(4)}</div>
                 </div>
                 <div className={`rounded-md border border-border p-2 ${stressTone === "destructive" ? "bg-destructive/10" : stressTone === "warning" ? "bg-accent/10" : "bg-success/10"}`}>
                   <div className={`text-[10px] uppercase ${stressTone === "destructive" ? "text-destructive" : stressTone === "warning" ? "text-accent-foreground" : "text-success"}`}>Liquidity Stress</div>
@@ -179,16 +190,34 @@ function FxRisk() {
                 </div>
               </div>
             </div>
-            <div className="rounded-md bg-secondary/40 p-4">
-              <div className="text-xs uppercase tracking-wide text-destructive">Recalculated Net Impact</div>
-              <div className="mt-2 font-mono-num text-4xl font-bold text-destructive">${netImpact.toFixed(1)}M</div>
-              <div className="mt-1 text-xs text-muted-foreground">⚠ Incremental Loss: ${Math.abs(incremental).toFixed(1)}M</div>
-              <div className="mt-4 text-[11px] uppercase text-muted-foreground">Solvency Gauge</div>
-              <div className="mt-2 h-2 rounded-full bg-secondary">
-                <div className={`h-full rounded-full transition-all ${solvency < 40 ? "bg-destructive" : solvency < 70 ? "bg-accent" : "bg-success"}`} style={{ width: `${solvency}%` }} />
+            <div className="space-y-3">
+              <div className="rounded-md border border-border bg-secondary/30 p-3">
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Current Exposure (Base)</div>
+                <div className="mt-1 font-mono-num text-2xl font-semibold">${baselineMtm.toFixed(1)}M</div>
+                <div className="text-[11px] text-muted-foreground">Already incurred at today's rate.</div>
               </div>
-              <div className="mt-1 text-right text-xs font-mono-num">{solvency.toFixed(0)}%</div>
+              <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3">
+                <div className="text-[11px] uppercase tracking-wide text-destructive">Estimated Additional FX Loss</div>
+                <div className="mt-1 font-mono-num text-3xl font-bold text-destructive">${Math.abs(incremental).toFixed(1)}M</div>
+                <div className="text-[11px] text-muted-foreground">Projected additional loss under {severity.toLowerCase()} stress (+{pct.toFixed(1)}% USD).</div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between text-[11px] uppercase tracking-wide text-muted-foreground">
+                  <span>Liquidity Coverage Level</span>
+                  <span className="font-mono-num">{solvency.toFixed(0)}%</span>
+                </div>
+                <div className="mt-2 h-2 rounded-full bg-secondary">
+                  <div className={`h-full rounded-full transition-all ${solvency < 40 ? "bg-destructive" : solvency < 70 ? "bg-accent" : "bg-success"}`} style={{ width: `${solvency}%` }} />
+                </div>
+                <div className="mt-1 text-[11px] text-muted-foreground">Estimated ability to absorb FX-related payment pressure.</div>
+              </div>
             </div>
+          </div>
+          <div className="mt-4 rounded-md border-l-2 border-accent bg-secondary/40 p-3 text-xs leading-relaxed">
+            <span className="font-semibold text-foreground">Risk Summary: </span>
+            A +{pct.toFixed(1)}% USD move at {activeBank.b} increases payable exposure by{" "}
+            <span className="font-mono-num font-semibold text-destructive">E£{(usdExposureM * (stressed - baseRate)).toFixed(0)}M</span>
+            {pct >= 30 ? " — critical liquidity strain expected; pre-fund or hedge immediately." : pct >= 15 ? " — material strain on cash; consider partial forward cover." : " — manageable within current cash buffers."}
           </div>
         </Section>
 
@@ -217,7 +246,7 @@ function FxRisk() {
                   <div className="mt-1 h-3 rounded bg-destructive transition-all" style={{ width: `${Math.min(100, 55 * (ocStress / ocBase))}%` }} />
                 </div>
                 <div className="rounded-md bg-secondary/50 p-2 text-[11px] leading-relaxed text-muted-foreground">
-                  <span className="font-semibold text-foreground">Observation:</span> {severity} stress at {activeBank.b} reprices {pct.toFixed(1)}% of USD/EGP, shifting E£{((apStress + ocStress) - (apBase + ocBase)).toFixed(2)}B from low-risk to high-risk liquidity buckets.
+                  <span className="font-semibold text-foreground">What this means:</span> Under a {severity.toLowerCase()} +{pct.toFixed(1)}% USD move priced via {activeBank.b}, payables and open contracts together cost an extra <span className="font-mono-num font-semibold text-destructive">E£{((apStress + ocStress) - (apBase + ocBase)).toFixed(2)}B</span>. {pct >= 30 ? "Action: lock forward cover today." : pct >= 15 ? "Action: review hedge ratios this week." : "Action: monitor; no immediate hedge required."}
                 </div>
               </div>
             );
