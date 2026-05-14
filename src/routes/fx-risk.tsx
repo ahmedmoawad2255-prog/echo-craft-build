@@ -112,12 +112,15 @@ function FxRisk() {
         </div>
       </Section>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-4">
-        <StatCard label="Total USD Liability" value="$58.1M" delta={`@ ${activeBank.b} ${baseRate.toFixed(4)}`} tone="warning"
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Outstanding USD Payables" value="$58.1M" delta={`@ ${activeBank.b} ${baseRate.toFixed(4)}`} tone="warning"
+          hint="Total unpaid supplier obligations in USD."
           spark={<Spark data={[40,42,48,50,53,55,58]} color="oklch(0.58 0.22 27)" />} />
-        <StatCard label="EGP Equivalent" value={`E£${(usdExposureM * baseRate).toFixed(1)}M`} delta={`Bank: ${activeBank.b}`} tone="default"
+        <StatCard label="Current EGP Exposure" value={`E£${(usdExposureM * baseRate).toFixed(1)}M`} delta={`Bank: ${activeBank.b}`} tone="default"
+          hint="Estimated EGP value using selected bank exchange rate."
           spark={<Spark data={[40,42,48,50,53,55,58].map(v => v * baseRate / 10)} color="oklch(0.55 0.18 250)" />} />
-        <StatCard label="FX MTM Impact" value={`$${baselineMtm.toFixed(1)}M`} delta="Unrealized EGP loss" tone="destructive"
+        <StatCard label="Unrealized FX Exposure Loss" value={`$${baselineMtm.toFixed(1)}M`} delta="Current valuation impact" tone="destructive"
+          hint="Valuation impact caused by USD/EGP movement."
           spark={<Spark data={[1,-1,-2,-3,-5,-6,-7]} color="oklch(0.58 0.22 27)" />} />
         <div className="rounded-lg bg-hero-navy p-4 text-primary-foreground">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent">
