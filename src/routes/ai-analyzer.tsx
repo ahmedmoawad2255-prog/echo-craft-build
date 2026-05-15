@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo, Fragment } from "react";
 import { toast } from "sonner";
 import { PageHeader, Section, Badge } from "@/components/ui-bits";
-import { Sparkles, ChevronDown, ChevronRight, ArrowUpDown } from "lucide-react";
+import { Sparkles, ChevronDown, ChevronRight, ArrowUpDown, TrendingUp, TrendingDown, Minus, AlertTriangle } from "lucide-react";
 
 export const Route = createFileRoute("/ai-analyzer")({ component: AIAnalyzer });
 
@@ -181,8 +181,7 @@ const IMPACT_TONE: Record<Impact, { variant: "success" | "destructive" | "warnin
 
 type SortKey = "instrument" | "current" | "previous" | "change" | "impact";
 
-function USDAIntelligenceTable() {
-  const [reportId, setReportId] = useState<string>(USDA_REPORTS[0].id);
+function USDAIntelligenceTable({ reportId, setReportId }: { reportId: string; setReportId: (id: string) => void }) {
   const [sortKey, setSortKey] = useState<SortKey>("instrument");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -353,9 +352,137 @@ function SortHeader({ label, k, sortKey, sortDir, onClick, align = "left" }: {
   );
 }
 
+// ============= Futures Trading Intelligence =============
+type FuturesBias = "BULLISH" | "BEARISH" | "NEUTRAL" | "HIGH RISK";
+type FuturesCard = {
+  commodity: string;
+  contract: string;
+  bias: FuturesBias;
+  biasScore: number; // -100..100
+  outlook: string;
+  risk: "LOW" | "MODERATE" | "ELEVATED" | "CRITICAL";
+  sentiment: string;
+};
+
+const COMMODITY_DEFS: { commodity: string; contract: string; keywords: string[] }[] = [
+  { commodity: "Wheat", contract: "CBOT · DEC", keywords: ["wheat"] },
+  { commodity: "Corn", contract: "CBOT · DEC", keywords: ["corn"] },
+  { commodity: "Soybeans", contract: "CBOT · JAN", keywords: ["soybean", "soy"] },
+  { commodity: "Soybean Meal", contract: "CBOT · JAN", keywords: ["meal", "crush"] },
+  { commodity: "Soybean Oil", contract: "CBOT · JAN", keywords: ["oil", "biodiesel", "crush"] },
+];
+
+function deriveFuturesIntelligence(report: ReportType): FuturesCard[] {
+  return COMMODITY_DEFS.map(({ commodity, contract, keywords }) => {
+    const matches = report.rows.filter((r) =>
+      keywords.some((k) => r.instrument.toLowerCase().includes(k))
+    );
+    let score = 0;
+    let risk: FuturesCard["risk"] = "LOW";
+    const driverParts: string[] = [];
+    matches.forEach((m) => {
+      if (m.impact === "BULLISH") score += 25;
+      else if (m.impact === "BEARISH") score -= 25;
+      else if (m.impact === "HIGH RISK") { score -= 10; risk = "CRITICAL"; }
+      driverParts.push(m.instrument);
+    });
+    if (matches.length === 0) {
+      return {
+        commodity, contract,
+        bias: "NEUTRAL", biasScore: 0,
+        outlook: `No direct ${commodity.toLowerCase()} signal in ${report.label}. Maintain neutral exposure.`,
+        risk: "LOW",
+        sentiment: "No catalyst",
+      };
+    }
+    score = Math.max(-100, Math.min(100, score));
+    let bias: FuturesBias = "NEUTRAL";
+    if ((risk as string) === "CRITICAL") bias = "HIGH RISK";
+    else if (score >= 25) bias = "BULLISH";
+    else if (score <= -25) bias = "BEARISH";
+    if ((risk as string) === "LOW" && Math.abs(score) >= 50) risk = "ELEVATED";
+    else if ((risk as string) === "LOW" && Math.abs(score) >= 25) risk = "MODERATE";
+    const outlook =
+      bias === "BULLISH" ? `Tightening signal from ${driverParts[0]} supports upside in ${commodity} futures; favor long ${contract}.` :
+      bias === "BEARISH" ? `Loosening balance sheet via ${driverParts[0]} pressures ${commodity}; favor short bias on rallies.` :
+      bias === "HIGH RISK" ? `Volatility spike risk in ${commodity} from ${driverParts[0]}; reduce naked exposure, prefer option spreads.` :
+      `Mixed inputs across ${matches.length} metric(s); range trade favored in ${commodity} until next print.`;
+    const sentiment =
+      bias === "BULLISH" ? `${Math.round(50 + score / 2)}% Bull` :
+      bias === "BEARISH" ? `${Math.round(50 + Math.abs(score) / 2)}% Bear` :
+      bias === "HIGH RISK" ? "Hedge bias" : "Mixed";
+    return { commodity, contract, bias, biasScore: score, outlook, risk, sentiment };
+  });
+}
+
+const BIAS_TONE: Record<FuturesBias, { chip: string; icon: typeof TrendingUp }> = {
+  BULLISH: { chip: "bg-success/15 text-success border-success/30", icon: TrendingUp },
+  BEARISH: { chip: "bg-destructive/15 text-destructive border-destructive/30", icon: TrendingDown },
+  NEUTRAL: { chip: "bg-secondary text-secondary-foreground border-border", icon: Minus },
+  "HIGH RISK": { chip: "bg-accent/20 text-accent-foreground border-accent/40", icon: AlertTriangle },
+};
+
+const RISK_TONE: Record<FuturesCard["risk"], string> = {
+  LOW: "text-muted-foreground",
+  MODERATE: "text-accent-foreground",
+  ELEVATED: "text-accent-foreground",
+  CRITICAL: "text-destructive",
+};
+
+function FuturesIntelligencePanel({ futures, reportLabel }: { futures: FuturesCard[]; reportLabel: string }) {
+  return (
+    <Section
+      title="Futures Trading Intelligence"
+      className="mt-6"
+      actions={<span className="text-[11px] text-muted-foreground">AI-derived from {reportLabel}</span>}
+    >
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        {futures.map((f) => {
+          const tone = BIAS_TONE[f.bias];
+          const Icon = tone.icon;
+          return (
+            <div key={f.commodity} className="rounded-md border border-border bg-card p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="text-sm font-bold">{f.commodity}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{f.contract}</div>
+                </div>
+                <span className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-bold uppercase ${tone.chip}`}>
+                  <Icon className="h-3 w-3" />
+                  {f.bias}
+                </span>
+              </div>
+              <div className="mt-3 h-1.5 rounded-full bg-secondary">
+                <div
+                  className={`h-full rounded-full ${f.biasScore >= 0 ? "bg-success" : "bg-destructive"}`}
+                  style={{ width: `${Math.max(8, Math.abs(f.biasScore))}%` }}
+                />
+              </div>
+              <div className="mt-2 flex justify-between text-[10px]">
+                <span className="text-muted-foreground">Sentiment</span>
+                <span className="font-mono-num font-semibold">{f.sentiment}</span>
+              </div>
+              <div className="mt-1 flex justify-between text-[10px]">
+                <span className="text-muted-foreground">Risk Level</span>
+                <span className={`font-semibold ${RISK_TONE[f.risk]}`}>{f.risk}</span>
+              </div>
+              <p className="mt-2 border-t border-border pt-2 text-[11px] leading-relaxed text-muted-foreground">
+                {f.outlook}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </Section>
+  );
+}
+
 function AIAnalyzer() {
   const [focus, setFocus] = useState<Focus>("Wheat");
+  const [reportId, setReportId] = useState<string>(USDA_REPORTS[0].id);
   const data = useMemo(() => FOCUS_DATA[focus], [focus]);
+  const activeReport = useMemo(() => USDA_REPORTS.find((r) => r.id === reportId)!, [reportId]);
+  const futures = useMemo(() => deriveFuturesIntelligence(activeReport), [activeReport]);
   return (
     <>
       <PageHeader
@@ -405,8 +532,10 @@ function AIAnalyzer() {
           </div>
         </Section>
 
-        <USDAIntelligenceTable />
+        <USDAIntelligenceTable reportId={reportId} setReportId={setReportId} />
       </div>
+
+      <FuturesIntelligencePanel futures={futures} reportLabel={activeReport.label} />
 
       <Section title="Institutional News Summary"
         className="mt-6"
