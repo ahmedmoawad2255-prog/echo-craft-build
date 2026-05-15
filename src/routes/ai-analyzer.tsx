@@ -407,8 +407,10 @@ function AIAnalyzer() {
           </div>
         </Section>
 
-        <USDAIntelligenceTable />
+        <USDAIntelligenceTable reportId={reportId} setReportId={setReportId} />
       </div>
+
+      <FuturesIntelligencePanel futures={futures} reportLabel={activeReport.label} />
 
       <Section title="Institutional News Summary"
         className="mt-6"
