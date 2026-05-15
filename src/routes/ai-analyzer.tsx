@@ -397,11 +397,11 @@ function deriveFuturesIntelligence(report: ReportType): FuturesCard[] {
     }
     score = Math.max(-100, Math.min(100, score));
     let bias: FuturesBias = "NEUTRAL";
-    if (risk === "CRITICAL") bias = "HIGH RISK";
+    if ((risk as string) === "CRITICAL") bias = "HIGH RISK";
     else if (score >= 25) bias = "BULLISH";
     else if (score <= -25) bias = "BEARISH";
-    if (risk === "LOW" && Math.abs(score) >= 50) risk = "ELEVATED";
-    else if (risk === "LOW" && Math.abs(score) >= 25) risk = "MODERATE";
+    if ((risk as string) === "LOW" && Math.abs(score) >= 50) risk = "ELEVATED";
+    else if ((risk as string) === "LOW" && Math.abs(score) >= 25) risk = "MODERATE";
     const outlook =
       bias === "BULLISH" ? `Tightening signal from ${driverParts[0]} supports upside in ${commodity} futures; favor long ${contract}.` :
       bias === "BEARISH" ? `Loosening balance sheet via ${driverParts[0]} pressures ${commodity}; favor short bias on rallies.` :
