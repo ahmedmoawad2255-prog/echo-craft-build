@@ -281,8 +281,8 @@ function USDAIntelligenceTable() {
               const isOpen = !!expanded[r.instrument];
               const tone = IMPACT_TONE[r.impact];
               return (
-                <>
-                  <tr key={r.instrument} className="hover:bg-secondary/40">
+                <Fragment key={r.instrument}>
+                  <tr className="hover:bg-secondary/40">
                     <td className="py-3 pl-1">
                       <button
                         onClick={() => setExpanded((p) => ({ ...p, [r.instrument]: !p[r.instrument] }))}
@@ -306,7 +306,7 @@ function USDAIntelligenceTable() {
                     </td>
                   </tr>
                   {isOpen && (
-                    <tr key={r.instrument + "-x"} className="bg-secondary/30">
+                    <tr className="bg-secondary/30">
                       <td></td>
                       <td colSpan={5} className="py-3 pr-3">
                         <div className="flex items-start gap-2 text-xs leading-relaxed">
@@ -316,7 +316,7 @@ function USDAIntelligenceTable() {
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               );
             })}
           </tbody>
