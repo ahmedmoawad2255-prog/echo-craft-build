@@ -181,8 +181,7 @@ const IMPACT_TONE: Record<Impact, { variant: "success" | "destructive" | "warnin
 
 type SortKey = "instrument" | "current" | "previous" | "change" | "impact";
 
-function USDAIntelligenceTable() {
-  const [reportId, setReportId] = useState<string>(USDA_REPORTS[0].id);
+function USDAIntelligenceTable({ reportId, setReportId }: { reportId: string; setReportId: (id: string) => void }) {
   const [sortKey, setSortKey] = useState<SortKey>("instrument");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
