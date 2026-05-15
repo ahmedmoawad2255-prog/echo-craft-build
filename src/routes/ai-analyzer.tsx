@@ -354,7 +354,10 @@ function SortHeader({ label, k, sortKey, sortDir, onClick, align = "left" }: {
 
 function AIAnalyzer() {
   const [focus, setFocus] = useState<Focus>("Wheat");
+  const [reportId, setReportId] = useState<string>(USDA_REPORTS[0].id);
   const data = useMemo(() => FOCUS_DATA[focus], [focus]);
+  const activeReport = useMemo(() => USDA_REPORTS.find((r) => r.id === reportId)!, [reportId]);
+  const futures = useMemo(() => deriveFuturesIntelligence(activeReport), [activeReport]);
   return (
     <>
       <PageHeader
