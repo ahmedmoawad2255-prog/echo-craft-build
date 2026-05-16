@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo, Fragment } from "react";
 import { toast } from "sonner";
 import { PageHeader, Section, Badge } from "@/components/ui-bits";
-import { Sparkles, ChevronDown, ChevronRight, ArrowUpDown, TrendingUp, TrendingDown, Minus, AlertTriangle } from "lucide-react";
+import { Sparkles, ChevronDown, ChevronRight, ArrowUpDown, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 export const Route = createFileRoute("/ai-analyzer")({ component: AIAnalyzer });
 
@@ -13,9 +13,6 @@ const FOCUS_DATA: Record<Focus, {
   sentiment: string; pct: number; tone: "success" | "destructive" | "warning";
   summary: string;
   risks: { label: string; level: string; pct: number; tone: "destructive" | "warning" | "success" }[];
-  ai: string;
-  headline: string;
-  body: string;
 }> = {
   All: {
     sentiment: "Mixed", pct: 58, tone: "warning",
@@ -25,20 +22,14 @@ const FOCUS_DATA: Record<Focus, {
       { label: "Geopolitical Conflict", level: "MODERATE", pct: 55, tone: "warning" },
       { label: "Freight & Logistics", level: "ELEVATED", pct: 62, tone: "warning" },
     ],
-    ai: "Aggregate signal is mixed. Inter-commodity spreads favor long wheat / short corn pair trade into Q1.",
-    headline: "Cross-Commodity Divergence Defines Q4 Tape",
-    body: "Wheat firmness from MENA tenders contrasts with bearish US corn balance sheet revisions, while soy hovers as Brazil weather drives the next leg.",
   },
   Wheat: {
     sentiment: "Bullish", pct: 72, tone: "success",
-    summary: "AI identifies aggressive accumulation in wheat futures, correlated with Egyptian GASC tender activity and supply tightness in Black Sea export hubs.",
+    summary: "AI identifies aggressive accumulation in wheat futures, correlated with Egyptian GASC tender activity and Black Sea supply tightness.",
     risks: [
       { label: "Black Sea Export Risk", level: "CRITICAL", pct: 88, tone: "destructive" },
       { label: "MENA Tender Demand", level: "HIGH", pct: 78, tone: "warning" },
     ],
-    ai: "Negative deviation in global wheat stocks confirms underlying supply fragility. Hedge positions should focus on Dec '24 wheat contracts.",
-    headline: "Global Dynamics: Egyptian Demand Pressure vs. Improved US Weather Outlook",
-    body: "Egypt's GASC has intensified its tender cycle, revealing a broader strategic deficit in North African reserves. Black Sea dryness continues to degrade yield expectations, sustaining the bullish momentum in CBT contracts.",
   },
   Corn: {
     sentiment: "Bearish", pct: 64, tone: "destructive",
@@ -47,9 +38,6 @@ const FOCUS_DATA: Record<Focus, {
       { label: "US Yield Upside", level: "ELEVATED", pct: 70, tone: "warning" },
       { label: "Ethanol Margin Compression", level: "MODERATE", pct: 48, tone: "warning" },
     ],
-    ai: "Stocks-to-use ratio expansion suggests downside risk to $4.15/bu support. Reduce length on rallies into USDA print.",
-    headline: "Corn Pressured by Stocks Build and Benign US Weather",
-    body: "Improving climatic moisture across the Western Hemisphere combined with elevated South American forecasts continues to weigh on the CBOT corn curve.",
   },
   Soybeans: {
     sentiment: "Neutral", pct: 51, tone: "warning",
@@ -58,141 +46,124 @@ const FOCUS_DATA: Record<Focus, {
       { label: "Brazil Production Risk", level: "HIGH", pct: 74, tone: "warning" },
       { label: "China Crush Demand", level: "STABLE", pct: 50, tone: "success" },
     ],
-    ai: "Range trade favored ($10.20–$10.85). Sell calls into resistance; protect downside with put spreads on CONAB upgrade risk.",
-    headline: "Soy Complex Range-Bound Between Brazil Supply and China Demand",
-    body: "Record-pace Brazilian planting offsets resilient Chinese crush margins. The cross-currency pass-through via BRL remains the dominant macro overlay.",
   },
 };
 
 // ============= USDA Intelligence Table =============
 type Impact = "BULLISH" | "BEARISH" | "NEUTRAL" | "HIGH RISK";
 type ReportRow = {
-  instrument: string;
+  metric: string;
   current: number;
   previous: number;
   unit: string;
   impact: Impact;
   ai: string;
 };
-type ReportType = {
-  id: string;
-  label: string;
-  releaseDate: string;
-  previousDate: string;
-  rows: ReportRow[];
-};
+type ReportId = "wasde" | "export-sales";
+type Commodity = "Wheat" | "Corn" | "Soybeans";
 
-const USDA_REPORTS: ReportType[] = [
-  {
-    id: "wasde",
-    label: "WASDE Monthly Report",
-    releaseDate: "Nov 8, 2025",
-    previousDate: "Oct 10, 2025",
-    rows: [
-      { instrument: "Wheat Ending Stocks (Global)", current: 257.7, previous: 261.4, unit: "M MT", impact: "BULLISH", ai: "Lower global wheat stocks vs. previous WASDE suggest tightening supply and supportive futures sentiment into Dec contracts." },
-      { instrument: "Corn Ending Stocks (US)", current: 1999, previous: 1940, unit: "M Bu", impact: "BEARISH", ai: "US corn stocks revised higher — confirms ample old-crop carryout and pressures CBOT Dec corn near $4.15 support." },
-      { instrument: "Soybean Production (Brazil)", current: 162.0, previous: 161.0, unit: "M MT", impact: "BEARISH", ai: "Brazil soy revised up; balance sheet remains heavy. Watch CONAB for further upward revisions." },
-      { instrument: "Wheat Production (EU)", current: 126.2, previous: 128.5, unit: "M MT", impact: "BULLISH", ai: "EU wheat downgrade reinforces Black Sea demand pull — supportive for milling wheat premium." },
-    ],
-  },
-  {
-    id: "export-sales",
-    label: "Export Sales Weekly Report",
-    releaseDate: "Nov 13, 2025",
-    previousDate: "Nov 6, 2025",
-    rows: [
-      { instrument: "Wheat Net Sales", current: 412, previous: 298, unit: "K MT", impact: "BULLISH", ai: "Wheat export sales jumped 38% w/w — driven by SE Asia and MENA buyers. Confirms tight global cash market." },
-      { instrument: "Corn Net Sales", current: 985, previous: 1245, unit: "K MT", impact: "BEARISH", ai: "Corn export pace softened — Brazilian competition at ports weighing on US Gulf basis." },
-      { instrument: "Soybean Net Sales", current: 1820, previous: 1680, unit: "K MT", impact: "NEUTRAL", ai: "Soy demand resilient but seasonally normal. China remains primary buyer." },
-    ],
-  },
-  {
-    id: "crop-progress",
-    label: "Crop Progress Report",
-    releaseDate: "Nov 10, 2025",
-    previousDate: "Nov 3, 2025",
-    rows: [
-      { instrument: "Corn Harvested (%)", current: 91, previous: 81, unit: "%", impact: "NEUTRAL", ai: "Harvest pace ahead of 5-yr avg. Limited surprise — already priced in." },
-      { instrument: "Soybeans Harvested (%)", current: 96, previous: 89, unit: "%", impact: "NEUTRAL", ai: "Soy harvest near completion; focus shifts to S. American planting." },
-      { instrument: "Winter Wheat Good/Excellent (%)", current: 47, previous: 51, unit: "%", impact: "BULLISH", ai: "Wheat condition deteriorating in Southern Plains — drought concerns building, supportive for KC wheat." },
-    ],
-  },
-  {
-    id: "grain-stocks",
-    label: "Grain Stocks Quarterly Report",
-    releaseDate: "Sep 30, 2025",
-    previousDate: "Jun 28, 2025",
-    rows: [
-      { instrument: "Corn Stocks (US, All Positions)", current: 1760, previous: 4993, unit: "M Bu", impact: "BULLISH", ai: "Sept 1 corn stocks below trade estimate of 1,840M — implies stronger feed/residual usage. Bullish revision risk for next WASDE." },
-      { instrument: "Soybean Stocks (US)", current: 342, previous: 970, unit: "M Bu", impact: "NEUTRAL", ai: "Soy stocks in line with consensus. No directional catalyst." },
-      { instrument: "Wheat Stocks (US)", current: 1986, previous: 1087, unit: "M Bu", impact: "BEARISH", ai: "Wheat stocks above estimates — softens domestic tightness narrative." },
-    ],
-  },
-  {
-    id: "prospective-plantings",
-    label: "Prospective Plantings Report",
-    releaseDate: "Mar 31, 2025",
-    previousDate: "Mar 31, 2024",
-    rows: [
-      { instrument: "Corn Acres Planted Intentions", current: 95.3, previous: 90.0, unit: "M Acres", impact: "BEARISH", ai: "Farmer intentions 5.3M acres above prior year — implies record corn supply potential." },
-      { instrument: "Soybean Acres Planted Intentions", current: 83.5, previous: 87.1, unit: "M Acres", impact: "BULLISH", ai: "Soy acres trimmed in favor of corn — could tighten balance sheet if yields disappoint." },
-      { instrument: "All Wheat Acres", current: 47.0, previous: 47.5, unit: "M Acres", impact: "NEUTRAL", ai: "Wheat acres broadly flat — no surprise vs. consensus." },
-    ],
-  },
-  {
-    id: "hogs-pigs",
-    label: "Hogs & Pigs Report",
-    releaseDate: "Sep 25, 2025",
-    previousDate: "Jun 27, 2025",
-    rows: [
-      { instrument: "All Hogs & Pigs Inventory", current: 76.4, previous: 74.5, unit: "M Head", impact: "BEARISH", ai: "Inventory expansion above consensus — pork supply build pressures lean hog futures." },
-      { instrument: "Breeding Herd", current: 6.0, previous: 6.0, unit: "M Head", impact: "NEUTRAL", ai: "Breeding herd flat — no change in producer expansion sentiment." },
-    ],
-  },
-  {
-    id: "cattle-on-feed",
-    label: "Cattle on Feed Report",
-    releaseDate: "Oct 24, 2025",
-    previousDate: "Sep 19, 2025",
-    rows: [
-      { instrument: "Cattle on Feed (1000+ head lots)", current: 11.6, previous: 11.5, unit: "M Head", impact: "NEUTRAL", ai: "On-feed numbers in line with trade estimates — limited price reaction expected." },
-      { instrument: "Placements (Monthly)", current: 2.05, previous: 2.21, unit: "M Head", impact: "BULLISH", ai: "Lower placements signal tighter spring beef supply — supportive for live cattle Q2 contracts." },
-    ],
-  },
-  {
-    id: "weather-drought",
-    label: "Weather & Drought Report",
-    releaseDate: "Nov 13, 2025",
-    previousDate: "Nov 6, 2025",
-    rows: [
-      { instrument: "US Drought Coverage (Plains)", current: 38, previous: 31, unit: "%", impact: "BULLISH", ai: "Plains drought expansion threatens winter wheat establishment — bullish for KC wheat futures." },
-      { instrument: "Brazil Soy Belt Rainfall (% Normal)", current: 78, previous: 92, unit: "%", impact: "HIGH RISK", ai: "Brazilian rainfall deficit emerging in Mato Grosso — high volatility risk if pattern persists into pollination." },
-      { instrument: "Argentina Pampas Soil Moisture", current: 62, previous: 70, unit: "% Field Cap", impact: "NEUTRAL", ai: "Soil moisture declining but adequate — monitor next 14-day forecast." },
-    ],
-  },
+const REPORT_OPTIONS: { id: ReportId; label: string; releaseDate: string; previousDate: string }[] = [
+  { id: "wasde", label: "WASDE Monthly Report", releaseDate: "Nov 8, 2025", previousDate: "Oct 10, 2025" },
+  { id: "export-sales", label: "Weekly Export Sales Report", releaseDate: "Nov 13, 2025", previousDate: "Nov 6, 2025" },
 ];
 
-const IMPACT_TONE: Record<Impact, { variant: "success" | "destructive" | "warning" | "neutral"; chip: string }> = {
-  BULLISH: { variant: "success", chip: "bg-success/15 text-success border-success/30" },
-  BEARISH: { variant: "destructive", chip: "bg-destructive/15 text-destructive border-destructive/30" },
-  NEUTRAL: { variant: "neutral", chip: "bg-secondary text-secondary-foreground border-border" },
-  "HIGH RISK": { variant: "warning", chip: "bg-accent/20 text-accent-foreground border-accent/40" },
+const COMMODITIES: Commodity[] = ["Wheat", "Corn", "Soybeans"];
+
+// Metrics by report + commodity
+const USDA_DATA: Record<ReportId, Record<Commodity, { rows: ReportRow[]; interpretation: string }>> = {
+  wasde: {
+    Wheat: {
+      rows: [
+        { metric: "Production (Global)", current: 794.1, previous: 796.8, unit: "M MT", impact: "BULLISH", ai: "Slight downward revision in global wheat output supports tighter supply narrative." },
+        { metric: "Ending Stocks (Global)", current: 257.7, previous: 261.4, unit: "M MT", impact: "BULLISH", ai: "Lower-than-anticipated ending stocks reinforce bullish technical floor for CBOT wheat." },
+        { metric: "Exports (US)", current: 21.8, previous: 21.0, unit: "M MT", impact: "BULLISH", ai: "Stronger US export forecast confirms healthy global tender demand." },
+        { metric: "Yield (US Winter)", current: 51.2, previous: 51.5, unit: "Bu/Ac", impact: "NEUTRAL", ai: "Yield broadly steady — limited surprise to balance sheet." },
+        { metric: "Global Stocks (Ex-China)", current: 102.5, previous: 105.1, unit: "M MT", impact: "BULLISH", ai: "Ex-China carryout shrinking — confirms exportable supply tightness." },
+      ],
+      interpretation: "Lower than anticipated ending stocks and strong export demand create a bullish technical floor for CBOT wheat despite stable yields.",
+    },
+    Corn: {
+      rows: [
+        { metric: "Production (US)", current: 15143, previous: 15064, unit: "M Bu", impact: "BEARISH", ai: "US corn output revised higher — confirms ample crop and pressures front-month futures." },
+        { metric: "Ending Stocks (US)", current: 1999, previous: 1940, unit: "M Bu", impact: "BEARISH", ai: "Stocks build adds slack to the balance sheet; bearish toward $4.15 support." },
+        { metric: "Exports (US)", current: 2325, previous: 2275, unit: "M Bu", impact: "BULLISH", ai: "Modest export upgrade — partially offsets stocks expansion." },
+        { metric: "Yield (US National)", current: 183.1, previous: 183.8, unit: "Bu/Ac", impact: "NEUTRAL", ai: "Yield trimmed marginally — neutral to slightly supportive." },
+        { metric: "Global Stocks", current: 312.8, previous: 314.6, unit: "M MT", impact: "NEUTRAL", ai: "Global carryout broadly unchanged." },
+      ],
+      interpretation: "Higher US production and stocks revisions outweigh export upgrades — bias remains bearish for CBOT corn into year-end.",
+    },
+    Soybeans: {
+      rows: [
+        { metric: "Production (US)", current: 4461, previous: 4475, unit: "M Bu", impact: "BULLISH", ai: "Slight downward US production revision supports front-month soy." },
+        { metric: "Ending Stocks (US)", current: 470, previous: 550, unit: "M Bu", impact: "BULLISH", ai: "Sharp cut in US carryout — tightens balance sheet, bullish bias confirmed." },
+        { metric: "Exports (US)", current: 1825, previous: 1750, unit: "M Bu", impact: "BULLISH", ai: "Higher export forecast driven by sustained China demand." },
+        { metric: "Yield (US)", current: 51.7, previous: 51.5, unit: "Bu/Ac", impact: "NEUTRAL", ai: "Yield broadly steady." },
+        { metric: "Production (Brazil)", current: 162.0, previous: 161.0, unit: "M MT", impact: "BEARISH", ai: "Brazil revised higher — partially offsets US tightening." },
+      ],
+      interpretation: "US balance sheet tightens materially on lower stocks and stronger exports, partially offset by record Brazil production.",
+    },
+  },
+  "export-sales": {
+    Wheat: {
+      rows: [
+        { metric: "Weekly Export Sales", current: 412, previous: 298, unit: "K MT", impact: "BULLISH", ai: "Sales jumped 38% w/w — driven by SE Asia and MENA buyers." },
+        { metric: "Shipments", current: 385, previous: 340, unit: "K MT", impact: "BULLISH", ai: "Shipment pace accelerating into Gulf — confirms export competitiveness." },
+        { metric: "Top Buyers", current: 3, previous: 2, unit: "Countries", impact: "BULLISH", ai: "Diversified demand base: Egypt, Indonesia, Nigeria active." },
+        { metric: "Export Pace (% of USDA)", current: 58, previous: 52, unit: "%", impact: "BULLISH", ai: "Pace ahead of seasonal norm — supportive of upward USDA revision." },
+        { metric: "Outstanding Sales", current: 6850, previous: 6520, unit: "K MT", impact: "BULLISH", ai: "Forward book building — confirms sustained tender demand." },
+      ],
+      interpretation: "Strong weekly export sales and rising outstanding book confirm healthy global wheat demand — bullish for CBOT wheat momentum.",
+    },
+    Corn: {
+      rows: [
+        { metric: "Weekly Export Sales", current: 985, previous: 1245, unit: "K MT", impact: "BEARISH", ai: "Export pace softened — Brazilian competition at ports weighing on US Gulf basis." },
+        { metric: "Shipments", current: 1120, previous: 1050, unit: "K MT", impact: "NEUTRAL", ai: "Shipments steady, but forward demand softening." },
+        { metric: "Top Buyers", current: 2, previous: 3, unit: "Countries", impact: "BEARISH", ai: "Buyer concentration narrowing — Mexico dominant, others stepping back." },
+        { metric: "Export Pace (% of USDA)", current: 42, previous: 45, unit: "%", impact: "BEARISH", ai: "Pace lagging seasonal norm — risk of USDA downgrade." },
+        { metric: "Outstanding Sales", current: 18450, previous: 18920, unit: "K MT", impact: "NEUTRAL", ai: "Outstanding book broadly flat." },
+      ],
+      interpretation: "Slowing weekly sales and lagging export pace suggest US corn losing share to Brazil — bearish near-term setup.",
+    },
+    Soybeans: {
+      rows: [
+        { metric: "Weekly Export Sales", current: 1820, previous: 1680, unit: "K MT", impact: "BULLISH", ai: "Strong sales driven by sustained China crush demand." },
+        { metric: "Shipments", current: 2100, previous: 1980, unit: "K MT", impact: "BULLISH", ai: "Gulf shipments accelerating — confirms execution on China book." },
+        { metric: "Top Buyers", current: 4, previous: 3, unit: "Countries", impact: "BULLISH", ai: "China dominant; EU and SE Asia incrementally adding." },
+        { metric: "Export Pace (% of USDA)", current: 64, previous: 60, unit: "%", impact: "BULLISH", ai: "Pace ahead of average — supports stocks tightening narrative." },
+        { metric: "Outstanding Sales", current: 22150, previous: 21800, unit: "K MT", impact: "BULLISH", ai: "Forward book growing — China rebuilding stockpiles." },
+      ],
+      interpretation: "Sales pace and outstanding book both expanding — bullish soy export setup with China driving the bid.",
+    },
+  },
 };
 
-type SortKey = "instrument" | "current" | "previous" | "change" | "impact";
+const IMPACT_TONE: Record<Impact, { chip: string }> = {
+  BULLISH: { chip: "bg-success/15 text-success border-success/30" },
+  BEARISH: { chip: "bg-destructive/15 text-destructive border-destructive/30" },
+  NEUTRAL: { chip: "bg-secondary text-secondary-foreground border-border" },
+  "HIGH RISK": { chip: "bg-accent/20 text-accent-foreground border-accent/40" },
+};
 
-function USDAIntelligenceTable({ reportId, setReportId }: { reportId: string; setReportId: (id: string) => void }) {
-  const [sortKey, setSortKey] = useState<SortKey>("instrument");
+type SortKey = "metric" | "current" | "previous" | "change" | "impact";
+
+function USDAIntelligenceTable({
+  reportId, setReportId, commodity, setCommodity,
+}: {
+  reportId: ReportId; setReportId: (id: ReportId) => void;
+  commodity: Commodity; setCommodity: (c: Commodity) => void;
+}) {
+  const [sortKey, setSortKey] = useState<SortKey>("metric");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-  const report = useMemo(() => USDA_REPORTS.find((r) => r.id === reportId)!, [reportId]);
+  const reportMeta = useMemo(() => REPORT_OPTIONS.find((r) => r.id === reportId)!, [reportId]);
+  const data = useMemo(() => USDA_DATA[reportId][commodity], [reportId, commodity]);
 
   const sorted = useMemo(() => {
-    const rows = [...report.rows];
+    const rows = [...data.rows];
     rows.sort((a, b) => {
       let av: number | string = 0, bv: number | string = 0;
-      if (sortKey === "instrument") { av = a.instrument; bv = b.instrument; }
+      if (sortKey === "metric") { av = a.metric; bv = b.metric; }
       else if (sortKey === "current") { av = a.current; bv = b.current; }
       else if (sortKey === "previous") { av = a.previous; bv = b.previous; }
       else if (sortKey === "change") {
@@ -205,23 +176,12 @@ function USDAIntelligenceTable({ reportId, setReportId }: { reportId: string; se
       return 0;
     });
     return rows;
-  }, [report, sortKey, sortDir]);
+  }, [data, sortKey, sortDir]);
 
   function toggleSort(k: SortKey) {
     if (sortKey === k) setSortDir(sortDir === "asc" ? "desc" : "asc");
     else { setSortKey(k); setSortDir("asc"); }
   }
-
-  // AI synthesis aggregating across rows
-  const synthesis = useMemo(() => {
-    const bull = report.rows.filter((r) => r.impact === "BULLISH").length;
-    const bear = report.rows.filter((r) => r.impact === "BEARISH").length;
-    const risk = report.rows.filter((r) => r.impact === "HIGH RISK").length;
-    if (risk > 0) return `Volatility risk flagged across ${risk} metric(s). Tactical hedging advised; reduce naked exposure into next release.`;
-    if (bull > bear) return `Net bullish skew (${bull} bullish vs ${bear} bearish). Supply-side tightening bias dominates this report cycle.`;
-    if (bear > bull) return `Net bearish skew (${bear} bearish vs ${bull} bullish). Balance sheets loosening — pressure on front-month futures.`;
-    return `Balanced signal — no clear directional edge. Range-bound trading favored until next data print.`;
-  }, [report]);
 
   return (
     <Section
@@ -231,7 +191,7 @@ function USDAIntelligenceTable({ reportId, setReportId }: { reportId: string; se
         <div className="flex items-center gap-2">
           <Badge variant="success">LIVE FEED</Badge>
           <button
-            onClick={() => toast.success(`${report.label} exported (XLS)`)}
+            onClick={() => toast.success(`${reportMeta.label} · ${commodity} exported (XLS)`)}
             className="rounded-md border border-border px-2.5 py-1.5 text-xs hover:bg-secondary"
           >
             XLS Report
@@ -239,64 +199,79 @@ function USDAIntelligenceTable({ reportId, setReportId }: { reportId: string; se
         </div>
       }
     >
-      {/* Filter + metadata */}
+      {/* Filters */}
       <div className="-mt-2 mb-4 flex flex-wrap items-end justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">USDA Report Type</label>
-          <select
-            value={reportId}
-            onChange={(e) => { setReportId(e.target.value); setExpanded({}); }}
-            className="h-9 min-w-[260px] rounded-md border border-border bg-background px-3 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            {USDA_REPORTS.map((r) => (
-              <option key={r.id} value={r.id}>{r.label}</option>
-            ))}
-          </select>
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Report Type</label>
+            <select
+              value={reportId}
+              onChange={(e) => { setReportId(e.target.value as ReportId); setExpanded({}); }}
+              className="h-9 min-w-[240px] rounded-md border border-border bg-background px-3 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              {REPORT_OPTIONS.map((r) => (
+                <option key={r.id} value={r.id}>{r.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Commodity</label>
+            <div className="flex gap-1 rounded-md border border-border bg-background p-1">
+              {COMMODITIES.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => { setCommodity(c); setExpanded({}); }}
+                  className={`rounded px-3 py-1 text-xs font-semibold transition-colors ${commodity === c ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-1 text-[11px]">
-          <div><span className="text-muted-foreground">Release: </span><span className="font-mono-num font-semibold">{report.releaseDate}</span></div>
-          <div><span className="text-muted-foreground">Previous: </span><span className="font-mono-num font-semibold">{report.previousDate}</span></div>
+          <div><span className="text-muted-foreground">Release: </span><span className="font-mono-num font-semibold">{reportMeta.releaseDate}</span></div>
+          <div><span className="text-muted-foreground">Previous: </span><span className="font-mono-num font-semibold">{reportMeta.previousDate}</span></div>
           <div><span className="text-muted-foreground">Updated: </span><span className="font-mono-num font-semibold">{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span></div>
         </div>
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[720px] text-sm">
+        <table className="w-full min-w-[680px] text-sm">
           <thead>
             <tr className="border-b border-border text-left text-[11px] uppercase tracking-wider text-muted-foreground">
               <th className="w-6 py-2"></th>
-              <SortHeader label="Market Instrument" k="instrument" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
+              <SortHeader label="Market Metric" k="metric" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
               <SortHeader label="Current" k="current" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" />
               <SortHeader label="Previous" k="previous" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" />
               <SortHeader label="Change %" k="change" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" />
-              <SortHeader label="AI Market Impact" k="impact" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
+              <SortHeader label="AI Impact" k="impact" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {sorted.map((r) => {
               const abs = r.current - r.previous;
-              const pct = (abs / r.previous) * 100;
-              const isOpen = !!expanded[r.instrument];
+              const pct = r.previous !== 0 ? (abs / r.previous) * 100 : 0;
+              const isOpen = !!expanded[r.metric];
               const tone = IMPACT_TONE[r.impact];
               return (
-                <Fragment key={r.instrument}>
+                <Fragment key={r.metric}>
                   <tr className="hover:bg-secondary/40">
                     <td className="py-3 pl-1">
                       <button
-                        onClick={() => setExpanded((p) => ({ ...p, [r.instrument]: !p[r.instrument] }))}
+                        onClick={() => setExpanded((p) => ({ ...p, [r.metric]: !p[r.metric] }))}
                         className="rounded p-0.5 text-muted-foreground hover:text-foreground"
                         aria-label="Toggle commentary"
                       >
                         {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                       </button>
                     </td>
-                    <td className="py-3 pr-3 font-medium">{r.instrument}</td>
+                    <td className="py-3 pr-3 font-medium">{r.metric}</td>
                     <td className="py-3 pr-3 text-right font-mono-num">{r.current.toLocaleString()} <span className="text-[10px] text-muted-foreground">{r.unit}</span></td>
                     <td className="py-3 pr-3 text-right font-mono-num text-muted-foreground">{r.previous.toLocaleString()}</td>
                     <td className={`py-3 pr-3 text-right font-mono-num ${pct >= 0 ? "text-success" : "text-destructive"}`}>
                       {pct >= 0 ? "+" : ""}{pct.toFixed(2)}%
-                      <div className="text-[10px] text-muted-foreground">{abs >= 0 ? "+" : ""}{abs.toFixed(1)}</div>
                     </td>
                     <td className="py-3">
                       <span className={`inline-flex items-center rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${tone.chip}`}>
@@ -322,11 +297,11 @@ function USDAIntelligenceTable({ reportId, setReportId }: { reportId: string; se
         </table>
       </div>
 
-      {/* AI Synthesis */}
+      {/* AI Interpretation */}
       <div className="mt-4 flex items-start gap-2 rounded-md border-l-4 border-accent bg-secondary/50 p-3 text-xs">
         <Sparkles className="h-4 w-4 shrink-0 text-accent mt-0.5" />
         <p className="leading-relaxed">
-          <span className="font-semibold">AI Agent Synthesis · {report.label}:</span> {synthesis}
+          <span className="font-semibold">AI Interpretation · {reportMeta.label} · {commodity}:</span> {data.interpretation}
         </p>
       </div>
     </Section>
@@ -352,137 +327,72 @@ function SortHeader({ label, k, sortKey, sortDir, onClick, align = "left" }: {
   );
 }
 
-// ============= Futures Trading Intelligence =============
-type FuturesBias = "BULLISH" | "BEARISH" | "NEUTRAL" | "HIGH RISK";
-type FuturesCard = {
-  commodity: string;
-  contract: string;
-  bias: FuturesBias;
-  biasScore: number; // -100..100
-  outlook: string;
-  risk: "LOW" | "MODERATE" | "ELEVATED" | "CRITICAL";
-  sentiment: string;
-};
+// ============= News Summary =============
+type NewsBias = "Bullish" | "Bearish" | "Neutral";
 
-const COMMODITY_DEFS: { commodity: string; contract: string; keywords: string[] }[] = [
-  { commodity: "Wheat", contract: "CBOT · DEC", keywords: ["wheat"] },
-  { commodity: "Corn", contract: "CBOT · DEC", keywords: ["corn"] },
-  { commodity: "Soybeans", contract: "CBOT · JAN", keywords: ["soybean", "soy"] },
-  { commodity: "Soybean Meal", contract: "CBOT · JAN", keywords: ["meal", "crush"] },
-  { commodity: "Soybean Oil", contract: "CBOT · JAN", keywords: ["oil", "biodiesel", "crush"] },
+const NEWS_ITEMS: {
+  headline: string; source: string; timestamp: string; summary: string; commodity: string; bias: NewsBias;
+}[] = [
+  {
+    headline: "Egypt's GASC Returns to Market with 480k MT Wheat Tender",
+    source: "Reuters",
+    timestamp: "2h ago",
+    summary: "AI: GASC re-entry signals strategic restocking after extended absence — bullish for Black Sea cash and CBOT wheat premium into Dec contract.",
+    commodity: "Wheat",
+    bias: "Bullish",
+  },
+  {
+    headline: "Brazil CONAB Raises 2025/26 Soybean Crop Estimate to 166M MT",
+    source: "Bloomberg",
+    timestamp: "4h ago",
+    summary: "AI: Upward CONAB revision pressures soy complex but partially offset by US stocks tightening — net neutral to slightly bearish for Jan soy.",
+    commodity: "Soybeans",
+    bias: "Bearish",
+  },
+  {
+    headline: "US Ethanol Margins Compress as Crude Slides to $68/bbl",
+    source: "S&P Global",
+    timestamp: "6h ago",
+    summary: "AI: Weaker ethanol margins reduce corn grind demand — adds to bearish corn balance sheet narrative into year-end.",
+    commodity: "Corn",
+    bias: "Bearish",
+  },
+  {
+    headline: "Argentina Pampas Forecasts Show Below-Normal Rainfall Through Nov",
+    source: "World Weather",
+    timestamp: "8h ago",
+    summary: "AI: Soil moisture stress emerging in key soy regions — supportive risk premium for soy if pattern persists into pollination.",
+    commodity: "Soybeans",
+    bias: "Bullish",
+  },
+  {
+    headline: "China Books 6 Cargoes of US Soybeans for January Shipment",
+    source: "USDA Daily",
+    timestamp: "11h ago",
+    summary: "AI: Continued Chinese demand confirms US Gulf competitiveness — supportive for soy export book and front-month bias.",
+    commodity: "Soybeans",
+    bias: "Bullish",
+  },
 ];
 
-function deriveFuturesIntelligence(report: ReportType): FuturesCard[] {
-  return COMMODITY_DEFS.map(({ commodity, contract, keywords }) => {
-    const matches = report.rows.filter((r) =>
-      keywords.some((k) => r.instrument.toLowerCase().includes(k))
-    );
-    let score = 0;
-    let risk: FuturesCard["risk"] = "LOW";
-    const driverParts: string[] = [];
-    matches.forEach((m) => {
-      if (m.impact === "BULLISH") score += 25;
-      else if (m.impact === "BEARISH") score -= 25;
-      else if (m.impact === "HIGH RISK") { score -= 10; risk = "CRITICAL"; }
-      driverParts.push(m.instrument);
-    });
-    if (matches.length === 0) {
-      return {
-        commodity, contract,
-        bias: "NEUTRAL", biasScore: 0,
-        outlook: `No direct ${commodity.toLowerCase()} signal in ${report.label}. Maintain neutral exposure.`,
-        risk: "LOW",
-        sentiment: "No catalyst",
-      };
-    }
-    score = Math.max(-100, Math.min(100, score));
-    let bias: FuturesBias = "NEUTRAL";
-    if ((risk as string) === "CRITICAL") bias = "HIGH RISK";
-    else if (score >= 25) bias = "BULLISH";
-    else if (score <= -25) bias = "BEARISH";
-    if ((risk as string) === "LOW" && Math.abs(score) >= 50) risk = "ELEVATED";
-    else if ((risk as string) === "LOW" && Math.abs(score) >= 25) risk = "MODERATE";
-    const outlook =
-      bias === "BULLISH" ? `Tightening signal from ${driverParts[0]} supports upside in ${commodity} futures; favor long ${contract}.` :
-      bias === "BEARISH" ? `Loosening balance sheet via ${driverParts[0]} pressures ${commodity}; favor short bias on rallies.` :
-      bias === "HIGH RISK" ? `Volatility spike risk in ${commodity} from ${driverParts[0]}; reduce naked exposure, prefer option spreads.` :
-      `Mixed inputs across ${matches.length} metric(s); range trade favored in ${commodity} until next print.`;
-    const sentiment =
-      bias === "BULLISH" ? `${Math.round(50 + score / 2)}% Bull` :
-      bias === "BEARISH" ? `${Math.round(50 + Math.abs(score) / 2)}% Bear` :
-      bias === "HIGH RISK" ? "Hedge bias" : "Mixed";
-    return { commodity, contract, bias, biasScore: score, outlook, risk, sentiment };
-  });
-}
-
-const BIAS_TONE: Record<FuturesBias, { chip: string; icon: typeof TrendingUp }> = {
-  BULLISH: { chip: "bg-success/15 text-success border-success/30", icon: TrendingUp },
-  BEARISH: { chip: "bg-destructive/15 text-destructive border-destructive/30", icon: TrendingDown },
-  NEUTRAL: { chip: "bg-secondary text-secondary-foreground border-border", icon: Minus },
-  "HIGH RISK": { chip: "bg-accent/20 text-accent-foreground border-accent/40", icon: AlertTriangle },
+const NEWS_BIAS_TONE: Record<NewsBias, { chip: string; icon: typeof TrendingUp }> = {
+  Bullish: { chip: "bg-success/15 text-success border-success/30", icon: TrendingUp },
+  Bearish: { chip: "bg-destructive/15 text-destructive border-destructive/30", icon: TrendingDown },
+  Neutral: { chip: "bg-secondary text-secondary-foreground border-border", icon: Minus },
 };
 
-const RISK_TONE: Record<FuturesCard["risk"], string> = {
-  LOW: "text-muted-foreground",
-  MODERATE: "text-accent-foreground",
-  ELEVATED: "text-accent-foreground",
-  CRITICAL: "text-destructive",
-};
-
-function FuturesIntelligencePanel({ futures, reportLabel }: { futures: FuturesCard[]; reportLabel: string }) {
-  return (
-    <Section
-      title="Futures Trading Intelligence"
-      className="mt-6"
-      actions={<span className="text-[11px] text-muted-foreground">AI-derived from {reportLabel}</span>}
-    >
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        {futures.map((f) => {
-          const tone = BIAS_TONE[f.bias];
-          const Icon = tone.icon;
-          return (
-            <div key={f.commodity} className="rounded-md border border-border bg-card p-3">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <div className="text-sm font-bold">{f.commodity}</div>
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{f.contract}</div>
-                </div>
-                <span className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-bold uppercase ${tone.chip}`}>
-                  <Icon className="h-3 w-3" />
-                  {f.bias}
-                </span>
-              </div>
-              <div className="mt-3 h-1.5 rounded-full bg-secondary">
-                <div
-                  className={`h-full rounded-full ${f.biasScore >= 0 ? "bg-success" : "bg-destructive"}`}
-                  style={{ width: `${Math.max(8, Math.abs(f.biasScore))}%` }}
-                />
-              </div>
-              <div className="mt-2 flex justify-between text-[10px]">
-                <span className="text-muted-foreground">Sentiment</span>
-                <span className="font-mono-num font-semibold">{f.sentiment}</span>
-              </div>
-              <div className="mt-1 flex justify-between text-[10px]">
-                <span className="text-muted-foreground">Risk Level</span>
-                <span className={`font-semibold ${RISK_TONE[f.risk]}`}>{f.risk}</span>
-              </div>
-              <p className="mt-2 border-t border-border pt-2 text-[11px] leading-relaxed text-muted-foreground">
-                {f.outlook}
-              </p>
-            </div>
-          );
-        })}
-      </div>
-    </Section>
-  );
-}
+const CBOT_IMPACT: { contract: string; bias: NewsBias; note: string }[] = [
+  { contract: "CBOT Wheat", bias: "Bullish", note: "MENA tenders + Black Sea tightness" },
+  { contract: "CBOT Corn", bias: "Bearish", note: "Ethanol weakness + Brazil supply" },
+  { contract: "CBOT Soybeans", bias: "Neutral", note: "China demand vs Brazil crop" },
+];
 
 function AIAnalyzer() {
   const [focus, setFocus] = useState<Focus>("Wheat");
-  const [reportId, setReportId] = useState<string>(USDA_REPORTS[0].id);
+  const [reportId, setReportId] = useState<ReportId>("wasde");
+  const [commodity, setCommodity] = useState<Commodity>("Wheat");
   const data = useMemo(() => FOCUS_DATA[focus], [focus]);
-  const activeReport = useMemo(() => USDA_REPORTS.find((r) => r.id === reportId)!, [reportId]);
-  const futures = useMemo(() => deriveFuturesIntelligence(activeReport), [activeReport]);
+
   return (
     <>
       <PageHeader
@@ -532,38 +442,69 @@ function AIAnalyzer() {
           </div>
         </Section>
 
-        <USDAIntelligenceTable reportId={reportId} setReportId={setReportId} />
+        <USDAIntelligenceTable
+          reportId={reportId} setReportId={setReportId}
+          commodity={commodity} setCommodity={setCommodity}
+        />
       </div>
 
-      <FuturesIntelligencePanel futures={futures} reportLabel={activeReport.label} />
-
-      <Section title="Institutional News Summary"
+      <Section
+        title="News Summary"
         className="mt-6"
-        actions={<><Badge variant="destructive">LIVE</Badge> <span className="text-[11px] text-muted-foreground">Aggregated from 142 primary sources · Deduplicated by LLM</span></>}>
+        actions={<><Badge variant="destructive">LIVE</Badge> <span className="text-[11px] text-muted-foreground">Aggregated & AI-summarized from primary sources</span></>}
+      >
         <div className="grid gap-6 lg:grid-cols-4">
-          <div className="space-y-3 text-xs">
-            <div className="font-semibold uppercase text-muted-foreground">Commodity Risks</div>
-            {[
-              { c: "WHEAT", b: "BULLISH", t: "success" as const, n: "CBOT · DEC", v: "85% Bull" },
-              { c: "CORN", b: "BEARISH", t: "destructive" as const, n: "CBOT · DEC", v: "64% Bear" },
-              { c: "SOY", b: "NEUTRAL", t: "neutral" as const, n: "CBOT · NOV", v: "Mixed" },
-            ].map((m) => (
-              <div key={m.c} className="rounded border border-border p-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold">{m.c}</span>
-                  <Badge variant={m.t}>{m.b}</Badge>
-                </div>
-                <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
-                  <span>{m.n}</span><span>{m.v}</span>
-                </div>
-              </div>
-            ))}
+          {/* CBOT Price Impact - LEFT */}
+          <div className="space-y-3">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">CBOT Price Impact</div>
+            <div className="space-y-2">
+              {CBOT_IMPACT.map((c) => {
+                const tone = NEWS_BIAS_TONE[c.bias];
+                const Icon = tone.icon;
+                return (
+                  <div key={c.contract} className="rounded-md border border-border p-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold">{c.contract}</span>
+                      <span className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-bold uppercase ${tone.chip}`}>
+                        <Icon className="h-3 w-3" />
+                        {c.bias}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[10px] leading-snug text-muted-foreground">{c.note}</p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div className="lg:col-span-3">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">— Institutional Market Intelligence · {focus} —</div>
-            <h2 className="mt-2 text-2xl font-bold leading-tight">{data.headline}</h2>
-            <div className="mt-4 rounded-md border-l-4 border-accent bg-secondary/30 p-4 text-sm leading-relaxed">
-              {data.body}
+
+          {/* News feed - RIGHT */}
+          <div className="space-y-3 lg:col-span-3">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Market News · AI Summarized</div>
+            <div className="space-y-3">
+              {NEWS_ITEMS.map((n) => {
+                const tone = NEWS_BIAS_TONE[n.bias];
+                return (
+                  <article key={n.headline} className="rounded-md border border-border p-3 hover:bg-secondary/30">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <h4 className="text-sm font-semibold leading-snug">{n.headline}</h4>
+                      <span className={`inline-flex items-center rounded border px-2 py-0.5 text-[10px] font-bold uppercase ${tone.chip}`}>
+                        {n.bias}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                      <span className="font-semibold">{n.source}</span>
+                      <span>·</span>
+                      <span>{n.timestamp}</span>
+                      <span>·</span>
+                      <span className="font-semibold text-foreground/80">{n.commodity}</span>
+                    </div>
+                    <div className="mt-2 flex items-start gap-2 rounded border-l-2 border-accent bg-secondary/30 p-2 text-xs leading-relaxed">
+                      <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-accent" />
+                      <p>{n.summary}</p>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </div>
         </div>
